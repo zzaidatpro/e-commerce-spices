@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "../src/components/atoms/ui/button";
+import { Button } from "@/components/atoms/ui/button";
 
 export default function Home() {
   return (
