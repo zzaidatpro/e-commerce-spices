@@ -1,0 +1,225 @@
+my-ecommerce-monorepo/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                          # Workflow de CI (Lint, Typecheck, Build) sur chaque PR
+│       └── deploy.yml                      # Workflow de déploiement continu sur Vercel
+│
+├── .vscode/
+│   ├── extensions.json                     # Extensions VSCode recommandées (Tailwind, ESLint, Prettier)
+│   └── settings.json                       # Formatage automatique à la sauvegarde
+│
+├── apps/
+│   ├── admin/                              # 🛠️ APP DASHBOARD ADMIN (Next.js App Router)
+│   │   ├── app/
+│   │   │   ├── (auth)/
+│   │   │   │   ├── login/
+│   │   │   │   │   └── page.tsx            # Page de connexion réservée aux administrateurs
+│   │   │   │   └── layout.tsx              # Layout spécifique auth admin (sans sidebar)
+│   │   │   ├── (dashboard)/
+│   │   │   │   ├── layout.tsx              # Layout principal admin (Sidebar + Header + Guard Admin)
+│   │   │   │   ├── page.tsx                # Vue d'ensemble (KPI, graphiques de ventes, métriques)
+│   │   │   │   ├── customers/
+│   │   │   │   │   ├── page.tsx            # Table des clients
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       └── page.tsx        # Détail client & historique de commandes
+│   │   │   │   ├── orders/
+│   │   │   │   │   ├── page.tsx            # Table de gestion des commandes
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       └── page.tsx        # Traitement d'une commande (statut, livraison)
+│   │   │   │   └── products/
+│   │   │   │       ├── page.tsx            # Table globale des produits
+│   │   │   │       ├── new/
+│   │   │   │       │   └── page.tsx        # Formulaire de création de produit (React Hook Form + Zod)
+│   │   │   │       └── [id]/
+│   │   │   │           └── edit/
+│   │   │   │               └── page.tsx    # Édition d'un produit
+│   │   │   ├── api/
+│   │   │   │   └── export/
+│   │   │   │       └── route.ts            # API route pour export CSV/Excel des données
+│   │   │   ├── global-error.tsx            # Gestion des erreurs fatales admin
+│   │   │   ├── globals.css                 # Import Tailwind CSS + Variables CSS admin
+│   │   │   ├── loading.tsx                 # Skeleton loader global admin
+│   │   │   └── not-found.tsx               # Page 404 admin
+│   │   ├── actions/                        # Server Actions réservées au rôle Admin
+│   │   │   ├── customer-actions.ts        # Action de blocage/modification client
+│   │   │   ├── order-actions.ts           # Actions de changement de statut de commande
+│   │   │   └── product-actions.ts         # Actions CRUD produit (Create, Update, Delete)
+│   │   ├── components/                     # Composants UI 100% spécifiques au Back-Office
+│   │   │   ├── molecules/
+│   │   │   │   ├── analytics-card.tsx      # Carte d'affichage des statistiques
+│   │   │   │   └── status-selector.tsx     # Menu déroulant de changement d'état d'une commande
+│   │   │   └── organisms/
+│   │   │       ├── admin-sidebar.tsx       # Barre de navigation latérale du dashboard
+│   │   │       ├── order-details-view.tsx  # Modal/Vue détaillée d'une commande
+│   │   │       ├── product-form.tsx        # Formulaire principal produit (Zod client-side)
+│   │   │       └── sales-chart.tsx         # Graphique de chiffre d'affaires (Recharts)
+│   │   ├── hooks/                          # Hooks spécifiques à l'admin
+│   │   │   └── use-admin-analytics.ts      # Fetching/calculs de métriques
+│   │   ├── lib/                            # Helpers et utilitaires internes à l'admin
+│   │   │   └── admin-utils.ts
+│   │   ├── .eslintrc.js
+│   │   ├── next.config.mjs                 # Config Next.js (transpilation packages monorepo)
+│   │   ├── package.json                    # Dépendances de l'app Admin
+│   │   ├── postcss.config.js
+│   │   ├── tailwind.config.ts              # Configuration Tailwind de l'app Admin
+│   │   └── tsconfig.json
+│   │
+│   └── web/                                # 🛒 APP CLIENT E-COMMERCE (Next.js App Router)
+│       ├── app/
+│       │   ├── (auth)/
+│       │   │   ├── login/
+│       │   │   │   └── page.tsx            # Page de connexion client
+│       │   │   ├── register/
+│       │   │   │   └── page.tsx            # Page d'inscription client
+│       │   │   ├── reset-password/
+│       │   │   │   └── page.tsx            # Reconstitution de mot de passe
+│       │   │   └── layout.tsx              # Layout des pages auth client
+│       │   ├── (shop)/
+│       │   │   ├── page.tsx                # Homepage (Hero section, Tendance, Promos)
+│       │   │   ├── cart/
+│       │   │   │   └── page.tsx            # Page du panier détaillé
+│       │   │   ├── checkout/
+│       │   │   │   ├── page.tsx            # Tunnel de paiement (Formulaire + Stripe Element)
+│       │   │   │   └── success/
+│       │   │   │       └── page.tsx        # Page de confirmation de commande
+│       │   │   ├── products/
+│       │   │   │   ├── page.tsx            # Catalogue produit (Grille, Filtres dynamiques, Tri)
+│       │   │   │   └── [slug]/
+│       │   │   │       └── page.tsx        # Fiche produit détaillée (SSR / ISR)
+│       │   │   └── layout.tsx              # Layout boutique (Header boutique + Footer)
+│       │   ├── account/
+│       │   │   ├── layout.tsx              # Layout mon compte (Sidebar de navigation client)
+│       │   │   ├── page.tsx                # Profil client
+│       │   │   ├── addresses/
+│       │   │   │   └── page.tsx            # Gestion des adresses de livraison
+│       │   │   └── orders/
+│       │   │       ├── page.tsx            # Liste de mes commandes passées
+│       │   │       └── [id]/
+│       │   │           └── page.tsx        # Détail d'une commande client
+│       │   ├── api/
+│       │   │   └── webhooks/
+│       │   │       └── stripe/
+│       │   │           └── route.ts        # Endpoint Webhook Stripe (validation des paiements)
+│       │   ├── global-error.tsx            # Gestion des erreurs fatales client
+│       │   ├── globals.css                 # Import Tailwind CSS + Variables CSS boutique
+│       │   ├── loading.tsx                 # Skeleton loader global boutique
+│       │   └── not-found.tsx               # Page 404 client
+│       ├── actions/                        # Server Actions pour le Client Web
+│       │   ├── auth-actions.ts            # Actions Login, Inscription, Logout client
+│       │   ├── cart-actions.ts            # Actions Ajout, Retrait, Sync panier local/BDD
+│       │   └── checkout-actions.ts        # Création de la session de paiement Stripe
+│       ├── components/                     # Composants UI 100% spécifiques au Client Web
+│       │   ├── molecules/
+│       │   │   ├── cart-drawer.tsx         # Panier glissant (Sheet shadcn)
+│       │   │   ├── product-card.tsx        # Carte produit avec bouton rapide d'ajout
+│       │   │   └── rating-stars.tsx        # Affichage des avis étoiles
+│       │   └── organisms/
+│       │       ├── cart-summary.tsx        # Récapitulatif de la commande
+│       │       ├── checkout-form.tsx       # Formulaire de checkout complet
+│       │       ├── hero-banner.tsx         # Section Hero de la page d'accueil
+│       │       ├── product-filters.tsx     # Filtres de prix, catégorie, marque
+│       │       └── product-grid.tsx        # Grille responsive de cartes produits
+│       ├── hooks/                          # Hooks spécifiques à la boutique
+│       │   ├── use-cart.ts                 # Gestion de l'état du panier (Zustand ou React Context)
+│       │   └── use-checkout.ts             # Logique d'envoi du formulaire de paiement
+│       ├── lib/                            # Helpers et utilitaires internes au client web
+│       │   └── stripe.ts                   # Initialisation de Stripe SDK client
+│       ├── middleware.ts                   # Next.js Middleware (Session Supabase & Protection des routes /account)
+│       ├── .eslintrc.js
+│       ├── next.config.mjs                 # Config Next.js client
+│       ├── package.json                    # Dépendances de l'app Web
+│       ├── postcss.config.js
+│       ├── tailwind.config.ts              # Configuration Tailwind de l'app Web
+│       └── tsconfig.json
+│
+├── packages/                               # 📦 LIBRARIES ET PACKAGES PARTAGÉS
+│   ├── config-eslint/                      # Package de règles ESLint
+│   │   ├── base.js                         # Règles ESLint génériques JavaScript/TypeScript
+│   │   ├── nextjs.js                       # Rules spécifiques pour App Router Next.js
+│   │   ├── react.js                        # Rules spécifiques à React
+│   │   └── package.json
+│   │
+│   ├── config-tailwind/                    # Package de style partagé
+│   │   ├── package.json
+│   │   └── tailwind.config.ts              # Configuration Tailwind de base (Thème, Couleurs, Plugins)
+│   │
+│   ├── config-ts/                          # Package de configurations TypeScript
+│   │   ├── base.json                       # Config TS stricte de base
+│   │   ├── nextjs.json                     # Extends base.json pour Next.js App Router
+│   │   ├── react.json                      # Extends base.json pour React JSX
+│   │   └── package.json
+│   │
+│   ├── database/                           # Package Supabase, Types & Schemas Zod
+│   │   ├── src/
+│   │   │   ├── client/
+│   │   │   │   ├── browser.ts              # Client Supabase Browser (`createBrowserClient`)
+│   │   │   │   ├── server.ts               # Client Supabase Server (`createServerClient` pour App Router)
+│   │   │   │   └── middleware.ts           # Helper de mise à jour des cookies dans middleware Next.js
+│   │   │   ├── schemas/                    # 📜 SCHÉMAS ZOD PARTAGÉS
+│   │   │   │   ├── address.schema.ts       # Schéma de validation des adresses
+│   │   │   │   ├── auth.schema.ts          # Schéma Login / Register / Reset Password
+│   │   │   │   ├── index.ts                # Barrel export de tous les schémas
+│   │   │   │   ├── order.schema.ts         # Schéma de création et mise à jour de commande
+│   │   │   │   └── product.schema.ts       # Schéma de création et édition de produit
+│   │   │   ├── types/
+│   │   │   │   ├── db.types.ts             # Types TypeScript générés automatiquement depuis Supabase
+│   │   │   │   └── index.ts                # Extends & types métier personnalisés
+│   │   │   └── index.ts                    # Export public du package database
+│   │   ├── supabase/
+│   │   │   ├── migrations/                 # Fichiers de migration SQL Supabase (.sql)
+│   │   │   │   ├── 20260101000000_create_profiles.sql
+│   │   │   │   ├── 20260101000001_create_products.sql
+│   │   │   │   ├── 20260101000002_create_orders.sql
+│   │   │   │   └── 20260101000003_add_rls_policies.sql
+│   │   │   ├── config.toml                 # Config locale Supabase CLI
+│   │   │   └── seed.sql                    # Données de test pour l'environnement local
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── ui/                                 # ⚛️ DESIGN SYSTEM PARTAGÉ (shadcn/ui + Atomic)
+│       ├── src/
+│       │   ├── components/
+│       │   │   ├── ui/                     # ATOMES BRUTS SHADCN (Autogénérés via shadcn CLI)
+│       │   │   │   ├── avatar.tsx
+│       │   │   │   ├── badge.tsx
+│       │   │   │   ├── button.tsx
+│       │   │   │   ├── card.tsx
+│       │   │   │   ├── checkbox.tsx
+│       │   │   │   ├── dialog.tsx
+│       │   │   │   ├── dropdown-menu.tsx
+│       │   │   │   ├── form.tsx
+│       │   │   │   ├── input.tsx
+│       │   │   │   ├── label.tsx
+│       │   │   │   ├── select.tsx
+│       │   │   │   ├── sheet.tsx
+│       │   │   │   ├── skeleton.tsx
+│       │   │   │   ├── table.tsx
+│       │   │   │   ├── toast.tsx
+│       │   │   │   └── toaster.tsx
+│       │   │   ├── atoms/                  # ATOMES MÉTIER PARTAGÉS
+│       │   │   │   ├── price-format.tsx    # Formateur de prix (monnaie, devise, locale)
+│       │   │   │   ├── status-badge.tsx    # Badge d'état (En cours, Livré, Annulé, Actif)
+│       │   │   │   └── stock-indicator.tsx # Indicateur visuel (En stock, Stock faible, Épuisé)
+│       │   │   └── molecules/              # MOLÉCULES UI PARTAGÉES
+│       │   │       ├── confirm-dialog.tsx  # Dialog de confirmation réutilisable
+│       │   │       ├── data-table.tsx      # Table générique avec pagination (TanStack Table)
+│       │   │       ├── quantity-selector.tsx# Selecteur d'incrément/décrément de quantité
+│       │   │       └── search-input.tsx    # Barre de recherche avec icône et reset
+│       │   ├── hooks/                      # Hooks UI généraux
+│       │   │   ├── use-media-query.ts      # Hook de responsive design
+│       │   │   └── use-toast.ts            # Hook pour déclencher les notifications Toast
+│       │   ├── lib/
+│       │   │   └── utils.ts                # Helper cn() combining clsx + tailwind-merge
+│       │   └── index.ts                    # Point d'entrée d'exportation de l'UI
+│       ├── package.json
+│       └── tsconfig.json
+│
+├── .gitignore                              # Ignoring node_modules, .next, .env, etc.
+├── .prettierignore
+├── .prettierrc                             # Configuration de formatage globale
+├── package.json                            # Package.json racine (scripts globaux & turborepo)
+├── pnpm-lock.yaml                          # Verrou unique des dépendances du monorepo
+├── pnpm-workspace.yaml                     # Définition des dossiers workspace (apps/* et packages/*)
+├── README.md                               # Documentation du projet & instructions de démarrage
+├── tsconfig.json                           # Configuration TypeScript globale
+└── turbo.json                              # Configuration des pipelines de Build/Dev Turborepo
