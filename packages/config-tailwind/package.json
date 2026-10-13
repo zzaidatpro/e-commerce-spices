@@ -1,0 +1,13 @@
+{
+  "name": "@repo/config-tailwind",
+  "version": "1.0.0",
+  "exports": {
+    "./styles.css": "./styles.css"
+  },
+  "private": true,
+  "main": "./tailwind.config.ts",
+  "dependencies": {
+    "tailwindcss": "^4.0.0",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

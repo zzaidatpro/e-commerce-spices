@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -29,10 +29,16 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/config-tailwind": "workspace:*",
+    "@repo/config-ts": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@repo/database": "workspace:*",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.6.1",
+    "eslint": "^9.0.0",
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
