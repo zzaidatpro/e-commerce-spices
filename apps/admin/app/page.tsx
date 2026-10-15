@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/atoms/ui/button";
+import { Button } from "@repo/ui";
 import { createClient } from "@supabase/supabase-js";
 
 

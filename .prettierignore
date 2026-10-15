@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+coverage
+.next
+.turbo
+
+pnpm-lock.yaml
+
+*.log
+*.min.js
+
+.env
+.env.local
+.env.production
+
+storybook-static

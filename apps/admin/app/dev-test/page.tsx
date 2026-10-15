@@ -1,6 +1,5 @@
-import { PriceFormat } from '@/components/atoms/domain/price-format'
-import { RatingStars } from '@/components/atoms/domain/rating-stars';
-import { StockIndicator } from '@/components/atoms/domain/stock-indicator';
+import { PriceFormat, RatingStars, StockIndicator } from "@repo/ui" 
+
 
 export default function DevPlaygroundPage() {
   return (
