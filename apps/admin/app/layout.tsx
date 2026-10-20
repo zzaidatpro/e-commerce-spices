@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={cn("font-sans", geist.variable)}>
       <body className="font-poppins antialiased">{children}
-      <Toaster />
+    
 
       </body>
     </html>

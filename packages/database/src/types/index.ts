@@ -1,4 +1,3 @@
-export * from "./db.types";
 import { Database } from "./db.types";
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =

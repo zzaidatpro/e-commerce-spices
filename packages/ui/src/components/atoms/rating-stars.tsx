@@ -1,6 +1,6 @@
 import { Star, StarHalf } from 'lucide-react';
 import { Badge } from '../ui/badge';
-import { cn } from "src/lib/utils"
+import { cn } from "../../lib/utils"
 
 
 interface RatingStarsProps {

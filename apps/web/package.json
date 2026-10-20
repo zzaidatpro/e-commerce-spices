@@ -21,6 +21,8 @@
     "@supabase/supabase-js": "^2.117.3",
     "lucide-react": "^1.55.0",
     "next": "^16.4.0",
+    "next-auth": "^4.24.15",
+    "next-themes": "^0.4.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.90.0",
@@ -29,11 +31,12 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-ts": "workspace:*",
-    "@repo/ui": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

@@ -1,5 +1,5 @@
-import { Badge } from '../ui/badge';
-import { cn } from "src/lib/utils"
+import { Badge } from "../ui/badge";
+import { cn } from "../../lib/utils";
 
 interface PriceFormatProps {
   amount: number;
@@ -11,19 +11,19 @@ interface PriceFormatProps {
 
 export function PriceFormat({
   amount,
-  currency = 'EUR',
-  locale = 'fr-FR',
+  currency = "EUR",
+  locale = "fr-FR",
   className,
   originalAmount,
 }: PriceFormatProps) {
   const formattedPrice = new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency,
   }).format(amount);
 
   const formattedOriginalPrice = originalAmount
     ? new Intl.NumberFormat(locale, {
-        style: 'currency',
+        style: "currency",
         currency,
       }).format(originalAmount)
     : null;
@@ -33,7 +33,7 @@ export function PriceFormat({
     : null;
 
   return (
-    <div className={cn('inline-flex items-center gap-2', className)}>
+    <div className={cn("inline-flex items-center gap-2", className)}>
       <span className="font-semibold text-lg">{formattedPrice}</span>
       {formattedOriginalPrice && (
         <>

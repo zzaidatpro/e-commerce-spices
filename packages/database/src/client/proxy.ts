@@ -1,8 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { Database } from "./types/db.types";
+import { Database } from "../types/db.types";
 
-export async function updateSession(request: NextRequest) {
+export function proxy(request: any) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -32,8 +32,5 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Crucial : Rafraîchit le jeton d'authentification s'il a expiré
-  const { data: { user } } = await supabase.auth.getUser();
-
-  return { supabase, response: supabaseResponse, user };
+  return { supabase, response: supabaseResponse };
 }

@@ -1,8 +1,8 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient} from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { Database } from "../types/db.types";
+import { Database } from "./types/db.types";
 
-export function createMiddlewareSupabaseClient(request: any) {
+export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -15,7 +15,7 @@ export function createMiddlewareSupabaseClient(request: any) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        setAll(cookiesToSet: { name: string; value: string}[]) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
@@ -24,13 +24,16 @@ export function createMiddlewareSupabaseClient(request: any) {
             request,
           });
 
-          cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options);
+          cookiesToSet.forEach(({ name, value}) => {
+            supabaseResponse.cookies.set(name, value);
           });
         },
       },
     }
   );
 
-  return { supabase, response: supabaseResponse };
+  // Crucial : Rafraîchit le jeton d'authentification s'il a expiré
+  const { data: { user } } = await supabase.auth.getUser();
+
+  return { supabase, response: supabaseResponse, user };
 }

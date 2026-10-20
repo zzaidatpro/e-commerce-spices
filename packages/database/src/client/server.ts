@@ -1,4 +1,4 @@
-import { CookieOptionsWithName, createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Database } from "../types/db.types";
 
@@ -13,10 +13,10 @@ export async function createServerSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet :{ name: string; value: string; options: CookieOptionsWithName }[]) {
+        setAll(cookiesToSet :{ name: string; value: string}[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
+            cookiesToSet.forEach(({ name, value }) => {
+              cookieStore.set(name, value);
             });
           } catch {
             // Ignoré si appelé depuis un Server Component (géré par le middleware)

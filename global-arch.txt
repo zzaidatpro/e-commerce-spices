@@ -223,3 +223,16 @@ my-ecommerce-monorepo/
 ├── README.md                               # Documentation du projet & instructions de démarrage
 ├── tsconfig.json                           # Configuration TypeScript globale
 └── turbo.json                              # Configuration des pipelines de Build/Dev Turborepo
+
+
+Rôle	Valeur	Usage
+Vert épicerie	
+#063C2B	Texte principal, titres, fond des sections sombres
+Crème papier	
+#FCF0E4	Fond général de la page
+Encre	
+#1A1A17	Corps de texte (plus doux que le noir pur)
+Paprika	
+#B5452A	Nom des régions et liens de l’index, jamais en fond de bouton
+Orange	
+#FB6C0B	Réservé aux actions d’achat

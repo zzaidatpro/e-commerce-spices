@@ -15,6 +15,8 @@ export {  DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger,
         DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
         } from "./components/ui/dropdown-menu";
 
+// mollecules : 
+export {Toaster} from "./components/molecules/Toaster";
 
 
 
@@ -31,4 +33,5 @@ export * from './hooks/use-media-query';
 export * from './hooks/use-local-storage';
 export * from './hooks/use-on-click-outside';
 export * from './hooks/use-toast';
-export * from './components/molecules/Toaster'
+export * from './components/molecules/Toaster';
+export * from './components/molecules/confirm-dialog';

@@ -1,13 +1,13 @@
 @theme {
   --font-poppins: Poppins, sans-serif;
-  --color-shop_light_pink: #fcf0e4;
-  --color-shop_dark_green: #063c2B;
-  --color-shop_light_bg: #f6f6f6;
-  --color-shop_light_green: #3b9c3c;
-  --color-shop_orange: #fb6c0b;
+  --color-shop-light-pink: #fcf0e4;
+  --color-shop-dark-green: #063c2B;
+  --color-shop-light-bg: #f6f6f6;
+  --color-shop-light-green: #3b9c3c;
+  --color-shop-orange: #fb6c0b;
   --color-darkColor: #151515;
   --color-lightColor: #52525b;
-  --color-shop_lightOrange: #fca99b;
+  --color-shop-lightOrange: #fca99b;
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -39,18 +39,18 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: #063c2B;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: #fcf0e4;
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: #063c2B;
   --radius: 0.625rem;
 }
 
@@ -79,7 +79,13 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+.hoverEffect {
+  @apply transition-all duration-300 ease-in-out;
 }

@@ -13,7 +13,6 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["packages/shared/src/*"], // 
       "@ui/*": ["packages/ui/src/*"]
     }
   }
