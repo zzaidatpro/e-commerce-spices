@@ -1,5 +1,5 @@
 import { Badge } from '@/components/atoms/ui/badge';
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
 interface PriceFormatProps {
   amount: number;
@@ -16,6 +16,15 @@ export function PriceFormat({
   className,
   originalAmount,
 }: PriceFormatProps) {
+  if (isNaN(amount) || amount < 0) {
+    console.error("Invalid amount:", amount);
+    amount = 0;
+  }
+
+  if (originalAmount !== undefined && (isNaN(originalAmount) || originalAmount < 0)) {
+    console.error("Invalid originalAmount:", originalAmount);
+    originalAmount = undefined;
+  }
   const formattedPrice = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -28,7 +37,7 @@ export function PriceFormat({
       }).format(originalAmount)
     : null;
 
-  const discountPercentage = originalAmount
+  const discountPercentage = originalAmount && originalAmount > 0
     ? Math.round(((originalAmount - amount) / originalAmount) * 100)
     : null;
 

@@ -1,7 +1,6 @@
 import { Star, StarHalf } from 'lucide-react';
 import { Badge } from '@/components/atoms/ui/badge';
-import { cn } from "@/lib/utils";
-
+import { cn } from '@/lib/utils';
 
 interface RatingStarsProps {
   rating: number;
@@ -18,13 +17,24 @@ export function RatingStars({
   showScore = false,
   className,
 }: RatingStarsProps) {
+  if (isNaN(rating) || rating < 0) {
+    console.error("Invalid rating:", rating);
+    rating = 0;
+  }
+
+  if (isNaN(maxRating) || maxRating <= 0) {
+    console.error("Invalid maxRating:", maxRating);
+    maxRating = 5;
+  }
+
   const normalizedRating = Math.min(Math.max(rating, 0), maxRating);
 
   return (
     <div className={cn('inline-flex items-center gap-2', className)}>
       <div
         className="flex items-center text-amber-400"
-        aria-label={`Note: ${rating} sur ${maxRating}`}
+        aria-label={`Note: ${normalizedRating.toFixed(1)} sur ${maxRating}`}
+        role="img"
       >
         {Array.from({ length: maxRating }).map((_, index) => {
           const starValue = index + 1;
