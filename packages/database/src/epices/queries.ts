@@ -7,15 +7,12 @@ export interface SpiceFilterParams {
   search?: string;
 }
 
-/**
- * Récupère la liste des épices avec filtres appliqués côté serveur
- */
 export async function getFilteredSpices(
   supabase: SupabaseClient,
   filters: SpiceFilterParams
 ) {
   let query = supabase
-    .from('products')
+    .from('produits')
     .select('*');
 
   if (filters.region) {
@@ -40,9 +37,7 @@ export async function getFilteredSpices(
   return data || [];
 }
 
-/**
- * Récupère les groupes de catégories pour la barre latérale
- */
+
 export async function getCategoryGroups(supabase: SupabaseClient) {
   const { data: origin } = await supabase.from('origin').select('*');
   const { data: regions } = await supabase.from('region').select('*');
@@ -53,23 +48,23 @@ export async function getCategoryGroups(supabase: SupabaseClient) {
   };
 }
 
-/**
- * Récupère une épice par son slug
- */
-export async function getSpiceBySlug(supabase: SupabaseClient, slug: string) {
+export async function getSpicesByBestSeller(
+  supabase: SupabaseClient, 
+  is_best_seller: boolean = true
+) {
   const { data, error } = await supabase
-    .from('products')
-    .select('*, category:categories(id, nom, slug), region:regions(id, nom, slug)')
-    .eq('slug', slug)
-    .single();
+    .from('produits')
+    .select('id, nom, slug, is_best_seller, price_unitaire, image_url, origin, description')
+    .eq('is_best_seller', is_best_seller);
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error('Erreur lors de la récupération des best-sellers:', error);
+    return [];
+  }
+
   return data;
 }
 
-/**
- * Récupère les épices associées (même région ou même catégorie)
- */
 export async function getRelatedSpices(
   supabase: SupabaseClient,
   spiceId: string,
@@ -77,7 +72,7 @@ export async function getRelatedSpices(
   limit = 4
 ) {
   let query = supabase
-    .from('products')
+    .from('produits')
     .select('*, category:categories(id, nom, slug)')
     .neq('id', spiceId)
     .limit(limit);
@@ -95,7 +90,7 @@ export async function getRelatedSpices(
  */
 export async function getRegionsWithSpices(supabase: SupabaseClient) {
   const { data, error } = await supabase
-    .from('regions')
+    .from('produits')
     .select('*, products(*, category:categories(id, nom, slug))');
 
   if (error) throw new Error(`Erreur récupération origines: ${error.message}`);
