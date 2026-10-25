@@ -1,19 +1,57 @@
-import { z } from "zod";
-import type { TablesInsert } from "../types";
+import { z } from 'zod';
+import { Tables, TablesInsert, TablesUpdate } from '../types/db.types';
 
-const orderItemSchema = z.object({
-  produit_id: z.string().uuid("ID de produit invalide"),
-  quantite: z.coerce.number().int().positive("La quantité minimale est de 1"),
-  prix_facture: z.coerce.number().positive("Le prix facturé doit être supérieur à 0"),
-}) satisfies z.ZodType<Partial<TablesInsert<"order_items">>>;
+export const statutCommandeSchema = z.enum(['en_attente', 'payee', 'expediee', 'livree', 'annulee']);
 
+// orders
 export const orderSchema = z.object({
-  client_id: z.string().uuid("ID client invalide").optional().nullable(),
-  adresse_liv_id: z.string().uuid("ID adresse invalide").optional().nullable(),
-  statut: z.enum(["en_attente", "payée", "expédiée", "livrée", "annulée"]).default("en_attente"),
-  total: z.coerce.number().positive("Le total doit être supérieur à 0"),
-  items: z.array(orderItemSchema).min(1, "La commande doit contenir au moins un article"),
-})
+  id: z.string().uuid(),
+  client_id: z.string().uuid().nullable(),
+  adresse_liv_id: z.string().uuid().nullable(),
+  statut: statutCommandeSchema,
+  total: z.number(),
+  created_at: z.string(),
+}) satisfies z.ZodType<Tables<'orders'>>;
 
-export type OrderInput = z.infer<typeof orderSchema>;
-export type OrderItemInput = z.infer<typeof orderItemSchema>;
+export const orderInsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  client_id: z.string().uuid().nullable().optional(),
+  adresse_liv_id: z.string().uuid().nullable().optional(),
+  statut: statutCommandeSchema.optional(),
+  total: z.number().optional(),
+  created_at: z.string().optional(),
+}) satisfies z.ZodType<TablesInsert<'orders'>>;
+
+export const orderUpdateSchema = z.object({
+  id: z.string().uuid().optional(),
+  client_id: z.string().uuid().nullable().optional(),
+  adresse_liv_id: z.string().uuid().nullable().optional(),
+  statut: statutCommandeSchema.optional(),
+  total: z.number().optional(),
+  created_at: z.string().optional(),
+}) satisfies z.ZodType<TablesUpdate<'orders'>>;
+
+// orders items
+export const orderItemSchema = z.object({
+  id: z.string().uuid(),
+  order_id: z.string().uuid(),
+  produit_id: z.string().uuid().nullable(),
+  quantite: z.number(),
+  prix_facture: z.number(),
+}) satisfies z.ZodType<Tables<'order_items'>>;
+
+export const orderItemInsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  order_id: z.string().uuid(),
+  produit_id: z.string().uuid().nullable().optional(),
+  quantite: z.number(),
+  prix_facture: z.number(),
+}) satisfies z.ZodType<TablesInsert<'order_items'>>;
+
+export const orderItemUpdateSchema = z.object({
+  id: z.string().uuid().optional(),
+  order_id: z.string().uuid().optional(),
+  produit_id: z.string().uuid().nullable().optional(),
+  quantite: z.number().optional(),
+  prix_facture: z.number().optional(),
+}) satisfies z.ZodType<TablesUpdate<'order_items'>>;

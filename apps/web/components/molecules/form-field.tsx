@@ -4,7 +4,7 @@ type FormFieldProps = React.ComponentProps<"input"> & {
   id: string;
   label: string;
   hint?: string;
-  trailing?: React.ReactNode; // ex. bouton afficher/masquer le mot de passe
+  trailing?: React.ReactNode; 
 };
 
 export function FormField({ id, label, hint, trailing, className, ...props }: FormFieldProps) {

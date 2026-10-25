@@ -1,11 +1,10 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { Database } from "../types/db.types";
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-export async function createServerSupabaseClient() {
+export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -13,13 +12,15 @@ export async function createServerSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet :{ name: string; value: string}[]) {
+        // Ajout explicite du type pour cookiesToSet, name, value et options
+        setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
           try {
-            cookiesToSet.forEach(({ name, value }) => {
-              cookieStore.set(name, value);
-            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
           } catch {
-            // Ignoré si appelé depuis un Server Component (géré par le middleware)
+            // L'appel de setAll a pu être fait depuis un Server Component.
+            // On peut l'ignorer en toute sécurité.
           }
         },
       },

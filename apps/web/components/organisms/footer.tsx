@@ -11,6 +11,7 @@ const footerSections = [
       { label: 'Tous les produits', href: '/shop' },
       { label: 'Nouveautés', href: '/new' },
       { label: 'Promotions', href: '/sales' },
+      { label: 'Histoires', href: '/histoire'}
     ],
   },
   {

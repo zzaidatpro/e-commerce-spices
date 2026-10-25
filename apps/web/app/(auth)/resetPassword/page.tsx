@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
     setError(null);
 
     try {
-      // Exemple d'appel vers votre API de réinitialisation (ex: /api/auth/reset-password)
+      // test avec fetch avant de mettre un resetPasswordAction
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

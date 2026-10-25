@@ -1,0 +1,320 @@
+[
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "profile_id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "type_lieu",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "adresse_complete",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "url_google_maps",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "longitude",
+    "data_type": "numeric",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "latitude",
+    "data_type": "numeric",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "adresses_livraison",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "order_items",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "order_items",
+    "column_name": "order_id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "order_items",
+    "column_name": "produit_id",
+    "data_type": "uuid",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "order_items",
+    "column_name": "quantite",
+    "data_type": "integer",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "order_items",
+    "column_name": "prix_facture",
+    "data_type": "numeric",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "client_id",
+    "data_type": "uuid",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "adresse_liv_id",
+    "data_type": "uuid",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "statut",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "total",
+    "data_type": "numeric",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "orders",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "nom",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "prix_unitaire",
+    "data_type": "numeric",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "sku",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "image_url",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "origin",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "weight",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "stock",
+    "data_type": "integer",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "region",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "family",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "is_best_seller",
+    "data_type": "boolean",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "is_featured",
+    "data_type": "boolean",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "produits",
+    "column_name": "slug",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "nom",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "prenom",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "role",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "telephone",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "whatsapp",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "date_naissance",
+    "data_type": "date",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "email",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "produit_id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "client_id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "note",
+    "data_type": "integer",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "commentaire",
+    "data_type": "text",
+    "is_nullable": "YES"
+  },
+  {
+    "table_name": "rates",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "stocks",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "stocks",
+    "column_name": "produit_id",
+    "data_type": "uuid",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "stocks",
+    "column_name": "quantite",
+    "data_type": "integer",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "stocks",
+    "column_name": "mis_a_jour_le",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  }
+]

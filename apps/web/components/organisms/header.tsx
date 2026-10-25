@@ -7,6 +7,7 @@ import Logo from '../atoms/logo';
 import NavBar from '../molecules/navBar';
 import AdminBar from '../molecules/AdminBar';
 import { Badge } from '@repo/ui';
+import { headerData } from '../atoms/headerData';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,9 +46,9 @@ export default function Header() {
         {/* --- SECTION MOBILE (Bouton Burger & Icônes) --- */}
         <div className="flex md:hidden items-center gap-2">
           <Link href="/cart" className="p-2 text-foreground/85 hover:text-shop-orange relative" aria-label="Panier">
-            <ShoppingCart className="w-5 h-5" />
-            <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 bg-shop-orange text-white text-[9px] font-bold">
-              2
+            <ShoppingCart className="w-5 h-5 text-foreground hover:text-shop-light-green transition-colors" />
+            <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 bg-shop-light-green text-white text-[9px] font-bold">
+              {2}
             </Badge>
           </Link>
 
@@ -58,7 +59,7 @@ export default function Header() {
           >
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-foreground hover:text-shop-orange rounded-md transition-colors"
+              className="p-2 text-foreground hover:text-shop-light-green rounded-md transition-colors"
               aria-label="Ouvrir le menu"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -72,16 +73,24 @@ export default function Header() {
       {isOpen && (
         <div 
           onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          className="md:hidden absolute top-16 right-0 w-200px bg-background border-l border-b border-border shadow-xl py-4 px-4 flex flex-col gap-3 items-end text-right z-50 animate-in slide-in-from-right duration-800 ease-in-out"
+          
+          className="md-hidden absolute top-16 right-0 w-200px text-shop-dark-green bg-background border-l border-b border-border shadow-xl py-4 px-4 flex flex-col gap-3 items-end text-right z-50 animate-in slide-in-from-right duration-800 ease-in-out"
         >
          {/* Section Navigation */}
-          <div className="flex flex-col gap-2 w-full items-end">
-            <Link href="/" onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground hover:text-shop-orange transition-colors py-1">Accueil</Link>
-            <Link href="/shop" onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground hover:text-shop-orange transition-colors py-1">Boutique</Link>
-            <Link href="/categories" onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground hover:text-shop-orange transition-colors py-1">Catégories</Link>
-            <Link href="/about" onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground hover:text-shop-orange transition-colors py-1">À propos</Link>
-          </div>
+         <div className="flex flex-col gap-3 w-full items-end">
+          {headerData.map((item) => {
+            return (
+          <Link key={item.href}  href={item.href} className="hover:text-shop-light-green hooverEffect relative group"
+          >
+                <span className="absolute -bottom-0.5 left-1/2 w-0 h-0.5 bg-shop-light-green group-hover:w-1/2 hoverEffect group-hover:left-0" />
+                <span className="absolute -bottom-0.5 right-1/2 w-0 h-0.5 bg-shop-light-green group-hover:w-1/2 hoverEffect group-hover:right-0" />
+                      
+            {item.label}
+          </Link>
+        );
+      })}
+      
+         </div>
 
           <hr className="border-border w-full my-1" />
 

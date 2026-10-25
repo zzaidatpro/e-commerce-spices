@@ -1,14 +1,14 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-import type {Database} from "@repo/database"; 
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   });
 
-  // 1. Initialisation du client Supabase dans le Proxy
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -17,66 +17,43 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value);
-          });
-
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-
           cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options);
+            request.cookies.set({ name, value, ...options });
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({ name, value, ...options });
           });
         },
       },
-    }
+    },
   );
 
-  // 2. Vérification et rafraîchissement de la session utilisateur
-  // Note: getUser() est plus sécurisé que getSession() dans un middleware / proxy
+  // Rafraîchir la session si nécessaire
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const url = request.nextUrl.clone();
-  const isLoginPage = url.pathname === "/login";
-
-  // 3. Gestion de la protection des routes (RBAC)
-
-  // Cas A : Utilisateur NON connecté tentant d'accéder à une page protégée
-  if (!user && !isLoginPage) {
+  // Si l'utilisateur essaie d'accéder au dashboard sans être connecté
+  if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
+    const url = request.nextUrl.clone();
     url.pathname = "/login";
-    // Conserver la destination initiale pour redirection post-connexion
-    //url.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
-  // Cas B : Utilisateur CONNECTÉ
-  if (user) {
-    // Vérification du rôle d'administration (ex: stocké dans app_metadata ou la table profiles)
-    const userRole = user.app_metadata?.role || "user";
-
-    // Si l'utilisateur n'a pas le rôle 'admin', refuser l'accès aux routes protégées
-    if (userRole !== "admin" && !isLoginPage) {
-      url.pathname = "/unauthorized"; // Redirection vers une page d'accès refusé
-      return NextResponse.redirect(url);
-    }
-
-    // Rediriger vers le dashboard s'il essaie d'aller sur /login alors qu'il est déjà connecté en admin
-    if (isLoginPage && userRole === "admin") {
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
-  }
-
-  return supabaseResponse;
+  return response;
 }
 
-// 4. Matcher : Intercepter uniquement les routes de l'application (en ignorant les fichiers statiques)
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

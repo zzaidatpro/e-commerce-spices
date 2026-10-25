@@ -1,17 +1,40 @@
-import { z } from "zod";
-import type { TablesInsert, TablesUpdate } from "../types";
+import { z } from 'zod';
+import { Tables, TablesInsert, TablesUpdate } from '../types/db.types';
+
+export const typeRoleSchema = z.enum(['client', 'admin', 'livreur']);
 
 export const profileSchema = z.object({
-  id: z.string().uuid("ID utilisateur invalide"),
-  nom: z.string().min(2, "Le nom est requis"),
-  prenom: z.string().min(2, "Le prénom est requis"),
-  telephone: z.string().min(10, "Numéro de téléphone invalide").optional().nullable(),
-  whatsapp: z.string().min(10, "Numéro WhatsApp invalide").optional().nullable(),
-  date_naissance: z.string().optional().nullable(),
-  role: z.enum(["client", "admin", "livreur"]).default("client"),
-}) satisfies z.ZodType<Partial<TablesInsert<"profiles">>>;
+  id: z.string().uuid(),
+  nom: z.string(),
+  prenom: z.string(),
+  email: z.string().nullable(),
+  telephone: z.string().nullable(),
+  whatsapp: z.string().nullable(),
+  date_naissance: z.string().nullable(),
+  role: typeRoleSchema,
+  created_at: z.string(),
+}) satisfies z.ZodType<Tables<'profiles'>>;
 
-export const profileUpdateSchema = profileSchema.partial() satisfies z.ZodType<Partial<TablesUpdate<"profiles">>>;
+export const profileInsertSchema = z.object({
+  id: z.string().uuid(),
+  nom: z.string(),
+  prenom: z.string(),
+  email: z.string().nullable().optional(),
+  telephone: z.string().nullable().optional(),
+  whatsapp: z.string().nullable().optional(),
+  date_naissance: z.string().nullable().optional(),
+  role: typeRoleSchema.optional(),
+  created_at: z.string().optional(),
+}) satisfies z.ZodType<TablesInsert<'profiles'>>;
 
-export type ProfileInput = z.infer<typeof profileSchema>;
-export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export const profileUpdateSchema = z.object({
+  id: z.string().uuid().optional(),
+  nom: z.string().optional(),
+  prenom: z.string().optional(),
+  email: z.string().nullable().optional(),
+  telephone: z.string().nullable().optional(),
+  whatsapp: z.string().nullable().optional(),
+  date_naissance: z.string().nullable().optional(),
+  role: typeRoleSchema.optional(),
+  created_at: z.string().optional(),
+}) satisfies z.ZodType<TablesUpdate<'profiles'>>;
