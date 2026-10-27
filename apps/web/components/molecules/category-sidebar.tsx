@@ -17,25 +17,24 @@ export function CategorySidebar({ groups }: CategorySidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Récupère toutes les valeurs sélectionnées dans l'URL
+ 
   const selectedFamilies = searchParams.getAll('family');
   const selectedRegions = searchParams.getAll('region');
 
   const [isFamilyOpen, setIsFamilyOpen] = useState(true);
   const [isRegionOpen, setIsRegionOpen] = useState(true);
 
-  // Fonction pour gérer l'ajout/retrait d'un filtre dans l'URL
   const handleCheckboxChange = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     const currentValues = params.getAll(key);
 
     if (currentValues.includes(value)) {
-      // Si déjà coché, on le retire
+      
       const newValues = currentValues.filter((v) => v !== value);
       params.delete(key);
       newValues.forEach((v) => params.append(key, v));
     } else {
-      // Sinon, on l'ajoute
+
       params.append(key, value);
     }
 

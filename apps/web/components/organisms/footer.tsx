@@ -34,7 +34,6 @@ const footerSections = [
 ];
 
 export default function Footer() {
-  // Gestion de l'index ouvert pour l'accordéon mobile
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleAccordion = (index: number) => {

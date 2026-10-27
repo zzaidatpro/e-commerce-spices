@@ -18,7 +18,6 @@ export const NavBar = ({ className, cartItemCount = 0, onOpenCart }: NavBarProps
     <nav className={cn("sticky top-0 z-50 w-full border-none bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60", className)}>
       <div className="text-sm capitalize font-semibold text-lightColor container mx-auto flex h-10 items-center justify-between px-4 sm:px-8">
         
-        {/* Navigation principale (gauche) */}
        <nav className="hidden md:flex items-center gap-6">
       {headerData.map((item) => {
         
@@ -35,15 +34,13 @@ export const NavBar = ({ className, cartItemCount = 0, onOpenCart }: NavBarProps
       })}
     </nav>
 
-        {/* Menu mobile */}
-        <div className="md:hidden flex items-center">
+       <div className="md:hidden flex items-center">
           <button className="p-2 text-foreground hover:text-shop-light-green rounded-md" aria-label="Menu">
             <Menu className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Actions de droite */}
-        <div className="flex items-center gap-3">
+     <div className="flex items-center gap-3">
           
           <Link 
             href="/wishlist" 

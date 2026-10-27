@@ -6,7 +6,7 @@ export { Accordion,
          AccordionContent } from "./components/ui/accordion";
 export {Badge} from "./components/ui/badge";
 export { Input } from "./components/ui/input";
-export { Card } from "./components/ui/card";
+export * from "./components/ui/card";
 export { Dialog } from "./components/ui/dialog";
 export {  DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger,
           DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel,
@@ -27,6 +27,7 @@ export {PriceFormat} from "./components/atoms/price-format";
 export {RatingStars} from "./components/atoms/rating-stars";
 export {StockIndicator} from "./components/atoms/stock-indicator";
 
+
 //hooks
 export * from './hooks/use-debounce';
 export * from './hooks/use-media-query';
@@ -35,3 +36,5 @@ export * from './hooks/use-on-click-outside';
 export * from './hooks/use-toast';
 export * from './components/molecules/Toaster';
 export * from './components/molecules/confirm-dialog';
+
+export { slugify } from "./lib/utils";

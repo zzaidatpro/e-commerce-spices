@@ -65,20 +65,15 @@ export async function updateSession(
   }
 
   const pathname = request.nextUrl.pathname;
-
-  // 3. Vérification des accès via les règles RBAC définies dans rbac.ts
   const isAllowed = hasAccessToRoute(userRole, pathname);
 
-  if (!isAllowed) {
-    // Si non connecté, redirection vers la page de login avec mémorisation de l'URL cible
+  if (!isAllowed) {    
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = loginPath;
       url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
-    }
-
-    // Si connecté mais rôle insuffisant, redirection vers la page d'accueil ou non autorisé
+    }   
     const url = request.nextUrl.clone();
     url.pathname = unauthorizedPath;
     return NextResponse.redirect(url);

@@ -4,7 +4,7 @@ import { cn } from "@repo/ui";
 
 const Logo = ({ className }: { className?: string }) => {
   return (
-    <Link href="/tejpatta">
+    <Link href="/">
       <h2 className={cn(
         "text-[15px] font-black tracking-wider uppercase text-shop-dark-green hover:text-shop-light-green transition-colors duration-200 group font-sans",
           className

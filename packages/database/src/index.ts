@@ -14,3 +14,5 @@ export * from './types/history';
 export * from './types/catalog';
 export * from './schemas/product.schema'
 export * from './epices/home'
+export * from './epices/history-page'
+

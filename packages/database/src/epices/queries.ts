@@ -54,7 +54,7 @@ export async function getSpicesByBestSeller(
 ) {
   const { data, error } = await supabase
     .from('produits')
-    .select('id, nom, slug, is_best_seller, price_unitaire, image_url, origin, description')
+    .select('id, nom, slug, is_best_seller, prix_unitaire, image_url, origin, description')
     .eq('is_best_seller', is_best_seller);
 
   if (error || !data) {
@@ -85,21 +85,16 @@ export async function getRelatedSpices(
   return data || [];
 }
 
-/**
- * Récupère toutes les régions avec leurs épices associées
- */
 export async function getRegionsWithSpices(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('produits')
-    .select('*, products(*, category:categories(id, nom, slug))');
+    .select('*')
+    .order('origin');
 
   if (error) throw new Error(`Erreur récupération origines: ${error.message}`);
   return data || [];
 }
 
-/**
- * Récupère les événements chronologiques pour la page Histoire
- */
 export async function getHistoryTimeline(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('produits')

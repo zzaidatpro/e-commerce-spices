@@ -23,8 +23,7 @@ export function hasAccessToRoute(role: UserRole, pathname: string): boolean {
   const matchedPermission = RoutePermissions.find((perm) =>
     perm.exact ? pathname === perm.path : pathname.startsWith(perm.path),
   );
-
-  // Si la route n'est pas explicitement protégée, l'accès est public
+  
   if (!matchedPermission) {
     return true;
   }

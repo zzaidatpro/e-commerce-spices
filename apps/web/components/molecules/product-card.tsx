@@ -24,8 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
       href={`/products/${productSlug}`}
       className="group bg-background rounded-2xl border border-border/50 overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-300"
     >
-      {/* Visualisation de l'image */}
-      <div className="relative aspect-square w-full bg-muted overflow-hidden">
+     <div className="relative aspect-square w-full bg-muted overflow-hidden">
         {product.image_url ? (
           <Image
             src={product.image_url}
@@ -46,8 +45,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
         )}
       </div>
-
-      {/* Informations textuelles */}
+      
       <div className="p-4 flex flex-col flex-1 justify-between space-y-4">
         <div className="space-y-1">
           {product.family && (

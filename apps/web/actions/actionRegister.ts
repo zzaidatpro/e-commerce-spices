@@ -39,43 +39,12 @@ export async function registerUser(formData: FormData) {
     throw new Error(authError?.message || "Erreur lors de l'inscription.");
   }
 
-  // 2. Concaténation de l'adresse depuis le formulaire éclaté
-  const numero = formData.get('numero') as string;
-  const rue = formData.get('rue') as string;
-  const cite = formData.get('cite') as string;
-  const ville = formData.get('ville') as string;
-  const codePostal = formData.get('codePostal') as string;
-  const lieu = formData.get('lieu') as string;
-  const urlGoogleMap = formData.get('urlGoogleMap') as string;
-
-  const adresseConcatence = [
-    numero ? `N° ${numero}` : null,
-    rue,
-    cite ? `Cité ${cite}` : null,
-    ville,
-    codePostal,
-    lieu ? `(${lieu})` : null,
-    urlGoogleMap ? `[GPS: ${urlGoogleMap}]` : null,
-  ]
-    .filter(Boolean)
-    .join(', ');
-
-  // 3. Insertion dans la table 'profiles' avec la colonne unique 'adresse'
-  const { error: profileError } = await supabase.from('profiles').insert({
+  // 2. Insertion minimale dans la table 'profiles' (optionnel si géré par un Trigger Supabase)
+  await supabase.from('profiles').insert({
     id: authData.user.id,
     email: email,
-    nom: formData.get('nom'),
-    prenom: formData.get('prenom'),
-    telephone: formData.get('telephone'),
-    whatsapp: formData.get('whatsapp'),
-    date_naissance: formData.get('dateNaissance') || null,
-    adresse: adresseConcatence,
     role: 'user',
   });
-
-  if (profileError) {
-    throw new Error(`Erreur profil : ${profileError.message}`);
-  }
 
   redirect('/dashboard');
 }
