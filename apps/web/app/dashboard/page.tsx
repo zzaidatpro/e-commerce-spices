@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import DashboardForm from '@/components/dashboard-form';
+import DashboardForm from './dashboard-form';
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -18,7 +18,6 @@ export default async function DashboardPage() {
     }
   );
 
-  // 1. Vérifier l'authentification
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     redirect('/login');

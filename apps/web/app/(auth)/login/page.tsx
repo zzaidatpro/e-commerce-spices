@@ -6,7 +6,7 @@ import {loginAction} from '@/actions/actionsLogin' ;
 
 const initialState = {
   success: false,
-  message: '',
+  message: '',  
 };
 
 export default function LoginPage() {
@@ -67,6 +67,7 @@ export default function LoginPage() {
 
         <button
           type="submit"
+          id='btn_login'
           disabled={isPending}
           className="w-full py-2.5 mt-2 bg-shop-orange hover:bg-shop-orange/90 text-white font-medium text-sm rounded-md transition-colors disabled:opacity-50"
         >

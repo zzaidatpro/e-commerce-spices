@@ -1,10 +1,10 @@
 import Image from "next/image";
 import { Button } from "@repo/ui";
 import { getSpicesByBestSeller } from "@repo/database";
-import { createClient } from "@repo/database";
+import { createUserClient } from "@repo/database/client";
 
 export async function BestSellers() {
-  const supabase = await createClient();
+  const supabase = await createUserClient();
   const products = await getSpicesByBestSeller(supabase, true);
 
   return (

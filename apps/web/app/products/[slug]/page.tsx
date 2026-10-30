@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient } from '@repo/database';
+import { createUserClient } from '@repo/database/client';
 import { ArrowLeft, Tag, MapPin, ShoppingCart } from 'lucide-react';
 
 interface ProductDetailPageProps {
@@ -13,7 +13,7 @@ interface ProductDetailPageProps {
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createUserClient();
 
   // Récupération du produit correspondant au slug
   const { data: product, error } = await supabase
@@ -33,7 +33,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     <main className="min-h-screen max-w-5xl mx-auto p-4 md:p-8 space-y-6">
       {/* Bouton de retour vers le catalogue */}
       <Link
-        href="/"
+        href="/products"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -73,7 +73,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             </div>
 
             {/* Nom du produit */}
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            <h1 id='test_h1' className="text-3xl font-bold tracking-tight text-foreground">
               {product.nom || product.name}
             </h1>
 

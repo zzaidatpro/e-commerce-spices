@@ -1,5 +1,6 @@
+
 import React from "react";
-import { createClient } from "@repo/database";
+import { createUserClient } from "@repo/database/client";
 import { CategorySidebar } from "@/components/molecules/category-sidebar";
 import { ProductCard, ProductItem } from "@/components/molecules/product-card";
 
@@ -20,7 +21,7 @@ export default async function CataloguePage({ searchParams }: PageProps) {
   const selectedFamilies = toArray(params.family);
   const selectedRegions = toArray(params.region);
 
-  const supabase = await createClient();
+  const supabase = await createUserClient();
 
   let query = supabase.from("produits").select("*");
   if (selectedFamilies.length > 0) query = query.in("family", selectedFamilies);

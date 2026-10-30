@@ -43,7 +43,7 @@ export default async function RegionDetailPage({ params }: PageProps) {
           href="/origines"
           className="text-xs font-semibold text-shop-orange hover:underline inline-flex items-center gap-1"
         >
-          ← Retour à toutes les origines
+          ← les origines
         </Link>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">
           Terroir : {regionName}

@@ -12,7 +12,7 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        // Ajout explicite du type pour cookiesToSet, name, value et options
+        
         setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>

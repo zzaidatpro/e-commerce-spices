@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, User, Heart, Menu } from 'lucide-react';
 import { cn } from '@repo/ui';
 import { Badge } from '@repo/ui';
-import { headerData, NavItem } from '../atoms/headerData';
+import { headerData } from '../atoms/headerData';
+import { createUserClient } from '@repo/database/client';
 
 interface NavBarProps {
   className?: string;
@@ -14,14 +15,42 @@ interface NavBarProps {
 }
 
 export const NavBar = ({ className, cartItemCount = 0, onOpenCart }: NavBarProps) => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [supabase] = useState(() => createUserClient());
+
+  useEffect(() => {
+    let mounted = true;
+
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (mounted) {
+        setUser(user);
+        setLoading(false);
+      }
+    };
+
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   return (
-    <nav className={cn("sticky top-0 z-50 w-full border-none bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60", className)}>
+    <nav className={cn("w-full border-none bg-transparent", className)}>
       <div className="text-sm capitalize font-semibold text-lightColor container mx-auto flex h-10 items-center justify-between px-4 sm:px-8">
         
        <nav className="hidden md:flex items-center gap-6">
       {headerData.map((item) => {
-        
-
         return (
           <Link key={item.href}  href={item.href} className="hover:text-shop-light-green hooverEffect relative group"
           >
@@ -63,13 +92,18 @@ export const NavBar = ({ className, cartItemCount = 0, onOpenCart }: NavBarProps
             )}
           </button>
 
-          <Link 
-            href="/account" 
-            className="text-[10px] flex flex-row uppercase space-x-1 font-black tracking-wider text-shop-dark-green hover:text-shop-light-green transition-colors duration-200  font-sans"
-          >
-            <User className="w-4 h-4" />
-            <span>Compte</span>
-          </Link>
+          {!loading && (
+            <Link 
+              href={user ? "/dashboard" : "/account"} 
+              className="text-[10px] flex flex-row items-center space-x-1 font-black tracking-wider text-shop-dark-green hover:text-shop-light-green transition-colors duration-200 font-sans"
+              title={user ? user.email : "Compte"}
+            >
+              <User className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-[130px] lowercase">
+                {user ? user.email : "Compte"}
+              </span>
+            </Link>
+          )}
 
         </div>
 

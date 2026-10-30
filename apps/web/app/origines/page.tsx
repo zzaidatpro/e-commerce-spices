@@ -16,8 +16,6 @@ export default async function OriginesPage() {
   );
 
   const products = await getRegionsWithSpices(supabase as any);
-
-  // Regroupement des origines
   const regionsMap = (products || []).reduce((acc: Record<string, any>, product: any) => {
     if (!product.origin) return acc;
     
@@ -41,7 +39,7 @@ export default async function OriginesPage() {
   return (
     <div className="space-y-10 max-w-7xl mx-auto p-4 md:p-8">
       <div className="space-y-3">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Nos Origines & Terroirs</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Origines & Terroirs</h1>
         <p className="text-muted-foreground text-base max-w-2xl">
           Partez à la découverte des grandes régions du monde qui façonnent nos épices d'exception.
         </p>
