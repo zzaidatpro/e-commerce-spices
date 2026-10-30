@@ -1,0 +1,64 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      # Image Docker officielle Playwright avec Node.js pré-installé
+      - image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    working_directory: ~/repo
+
+jobs:
+  test-e2e:
+    executor: node-executor
+    steps:
+      - checkout
+
+      # Installation de pnpm
+      - run:
+          name: Corepack / pnpm Setup
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest --activate
+
+      # Restauration du cache pnpm
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pnpm-lock.yaml" }}
+            - v1-dependencies-
+
+      # Installation des dépendances
+      - run:
+          name: Install Dependencies
+          command: pnpm install --frozen-lockfile
+
+      # Sauvegarde du cache pnpm
+      - save_cache:
+          paths:
+            - ~/.local/share/pnpm/store
+          key: v1-dependencies-{{ checksum "pnpm-lock.yaml" }}
+
+      # Build de l'application apps/web (si nécessaire avant les tests E2E)
+      - run:
+          name: Build Web App
+          command: pnpm --filter web build
+          env:
+            NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      # Exécution des tests E2E Playwright sur apps/web
+      - run:
+          name: Run Playwright E2E Tests
+          command: pnpm --filter web test:e2e
+          env:
+            NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      # Sauvegarde des rapports Playwright (en cas d'échec pour débugger)
+      - store_artifacts:
+          path: apps/web/playwright-report
+          destination: playwright-report
+
+workflows:
+  quality-check:
+    jobs:
+      - test-e2e
