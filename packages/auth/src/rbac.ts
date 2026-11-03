@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'client' | 'guest';
+export type UserRole = 'admin' | 'client' | 'manager';
 
 export interface RoutePermission {
   path: string;
@@ -9,7 +9,7 @@ export interface RoutePermission {
 export const RoutePermissions: RoutePermission[] = [
   {
     path: '/admin',
-    allowedRoles: ['admin'],
+    allowedRoles: ['admin', 'manager'],
     exact: false,
   },
   {
@@ -17,6 +17,13 @@ export const RoutePermissions: RoutePermission[] = [
     allowedRoles: ['admin', 'client'],
     exact: false,
   },
+
+  {
+    path: '/admin/settings',
+    allowedRoles: ['admin'], 
+    exact: false,
+  },
+
 ];
 
 export function hasAccessToRoute(role: UserRole, pathname: string): boolean {

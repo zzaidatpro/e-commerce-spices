@@ -32,10 +32,10 @@ export function HeroBanner() {
 
        <div className="flex flex-wrap gap-4 pt-2">
           <Link
-            href="/"
+            href="/catalog"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-white/90 transition-colors shadow-sm"
           >
-            Explorer la boutique
+            Explorer le catalogue
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link

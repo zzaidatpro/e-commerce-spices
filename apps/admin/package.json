@@ -1,12 +1,17 @@
 {
-  "name": "ecommerce",
+  "name": "admin",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -15,11 +20,13 @@
     "@stripe/stripe-js": "^10.0.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
+    "admin": "^1.4.1",
+    "build": "^0.1.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.52.0",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.89.0",
@@ -30,20 +37,21 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@repo/config-tailwind": "workspace:*",
+    "@repo/config-ts": "workspace:*",
+    "@repo/database": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@repo/eslint-config": "workspace:*",
-    "@repo/config-tailwind": "workspace:*",
-    "@repo/config-ts": "workspace:*",
-    "@repo/ui": "workspace:*",
-    "@repo/database": "workspace:*",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "supabase": "^2.119.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5.6.3"
   },
   "packageManager": "pnpm@12.8.1"
 }

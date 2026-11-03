@@ -43,11 +43,15 @@ export async function updateProfile(formData: FormData) {
   const codePostal = formData.get("codePostal") as string;
   const lieu = (formData.get("lieu") as "maison" | "magasin" | "depot") || "maison";
   const urlGoogleMap = formData.get("urlGoogleMap") as string;
+  const long = formData.get("long") as string || '';
+  const lat = formData.get("lat") as string || '';
+
+
 
   const adresse_concatenee = [
     numero ? `N° ${numero}` : null,
     rue,
-    cite ? `Cité ${cite}` : null,
+    cite ? `${cite}` : null,
     ville,
     codePostal,
   ]
@@ -85,6 +89,8 @@ export async function updateProfile(formData: FormData) {
           type_lieu: lieu,
           adresse_complete: adresse_concatenee,
           url_google_maps: urlGoogleMap || null,
+          latitude: lat ? parseFloat(lat) : null,
+          longitude: long ? parseFloat(long) : null,
         })
         .eq("id", existingAddress.id);
 
@@ -97,6 +103,8 @@ export async function updateProfile(formData: FormData) {
         type_lieu: lieu,
         adresse_complete: adresse_concatenee,
         url_google_maps: urlGoogleMap || null,
+        latitude: lat ? parseFloat(lat) : null,
+        longitude: long ? parseFloat(long) : null,
       });
 
       if (addressError) {

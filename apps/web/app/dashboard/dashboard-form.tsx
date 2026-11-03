@@ -4,6 +4,9 @@ import React, { useState, useTransition } from 'react';
 import { updateProfile } from '@/actions/actionDashboard';
 import SessionTimeMolecule from '@/components/molecules/SessionTimeMolecule';
 import OrderHistoryMolecule from '@/components/molecules/OrderHistoryMolecule';
+import {Save} from 'lucide-react';
+import GoogleMapFieldWithPreview from '@/components/molecules/googleMapField';
+
 
 interface DashboardFormProps {
   initialProfile: {
@@ -14,6 +17,9 @@ interface DashboardFormProps {
     whatsapp?: string;
     date_naissance?: string;
     adresse?: string;
+    url_google_maps?: string;
+    longitude? : number;
+    latitude? : number;
   };
 }
 
@@ -220,19 +226,21 @@ export default function DashboardForm({ initialProfile }: DashboardFormProps) {
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label htmlFor="urlGoogleMap" className="text-xs font-semibold text-foreground">Google Maps (URL)</label>
-                  <input
-                    id="urlGoogleMap"
-                    name="urlGoogleMap"
-                    type="url"
-                    placeholder="https://maps.google.com/..."
-                    className="w-full px-3 py-2 border border-border rounded-xl bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-shop-orange/50"
-                  />
+
+               <div className="flex flex-col gap-1.5 text-left">
+                  <label htmlFor="urlGoogleMap" className="text-xs font-semibold text-foreground"></label>
+                  <div className="pt-2">
+                    <GoogleMapFieldWithPreview 
+                      defaultValue={initialProfile?.url_google_maps || ''} 
+                      defaultLat={initialProfile?.latitude ? String(initialProfile.latitude) : ''}
+                      defaultLong={initialProfile?.longitude ? String(initialProfile.longitude) : ''}
+                    />
+                  </div>
                 </div>
+                
               </div>
             </div>
-
+            
             <button
               type="submit"
               disabled={isPending}

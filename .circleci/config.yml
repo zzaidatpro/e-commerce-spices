@@ -3,7 +3,6 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      # Image Docker officielle Playwright avec Node.js pré-installé
       - image: mcr.microsoft.com/playwright:v1.40.0-jammy
     working_directory: ~/repo
 
@@ -13,12 +12,10 @@ jobs:
     steps:
       - checkout
 
-      # Installation de pnpm
+      # Installation globale de pnpm pour éviter les erreurs Corepack
       - run:
-          name: Corepack / pnpm Setup
-          command: |
-            corepack enable
-            corepack prepare pnpm@latest --activate
+          name: Install pnpm globally
+          command: npm install -g pnpm
 
       # Restauration du cache pnpm
       - restore_cache:
@@ -37,11 +34,21 @@ jobs:
             - ~/.local/share/pnpm/store
           key: v1-dependencies-{{ checksum "pnpm-lock.yaml" }}
 
-      # Build de l'application apps/web (si nécessaire avant les tests E2E)
+      # Vérification du typage TypeScript via Turborepo
+      - run:
+          name: Type Check
+          command: pnpm typecheck
+
+      # Exécution du linter via Turborepo
+      - run:
+          name: Lint
+          command: pnpm lint
+
+      # Build de l'application apps/web
       - run:
           name: Build Web App
           command: pnpm --filter web build
-          env:
+          environment:
             NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
             NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -49,11 +56,11 @@ jobs:
       - run:
           name: Run Playwright E2E Tests
           command: pnpm --filter web test:e2e
-          env:
+          environment:
             NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
             NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-      # Sauvegarde des rapports Playwright (en cas d'échec pour débugger)
+      # Sauvegarde des rapports Playwright en cas d'échec
       - store_artifacts:
           path: apps/web/playwright-report
           destination: playwright-report
