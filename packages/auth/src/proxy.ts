@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { hasAccessToRoute, type UserRole } from "./rbac";
+import { hasAccessToRoute, type User_role } from "./rbac";
 
 export interface SharedMiddlewareOptions {
   supabaseUrl: string;
@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest, options: SharedMiddlew
     data: { user },
   } = await supabase.auth.getUser();
 
-  let userRole: UserRole = "guest";
+  let userRole: User_role = "client";
 
   // 2. Si l'utilisateur est connecté, on interroge la table 'profiles' pour son rôle
   if (user) {
@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest, options: SharedMiddlew
       .eq("id", user.id)
       .single();
 
-    userRole = (profile?.role as UserRole) || "user";
+    userRole = (profile?.role as User_role) || "user";
   }
 
   const pathname = request.nextUrl.pathname;

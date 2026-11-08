@@ -1,33 +1,17 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import {requireRole} from './helper';
 
 export async function approveUserAction(targetUserId: string) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    }
-  );
-
-  const { error } = await supabase
+  const auth = await requireRole(['admin']).catch(()=> null);
+  if (!auth) return { error: 'Accès refusé.' };
+  const { error } = await auth.supabase
     .from('profiles')
     .update({ status: 'approved' })
     .eq('id', targetUserId);
+   if (error) return { error: error.message };
 
-  if (error) {
-    return { error: error.message };
-  }
-
-  revalidatePath('/admin/users');
+   revalidatePath('/admin/users');
   return { success: true };
 }

@@ -1,6 +1,6 @@
 import { createClient } from '@repo/database/server';
 import { updateUserRoleAction, updateUserStatusAction, deleteUserAction } from '@/actions/actionUserManagement';
-import { CheckCircle, Shield, Mail, Phone, Calendar, User, Lock, Unlock, Trash2 } from 'lucide-react';
+import { CheckCircle, Mail, Phone, Calendar, User, Lock, Unlock } from 'lucide-react';
 import { DeleteUserButton } from '@/components/atoms/DeleteUserButton';
 
 export default async function AdminUsersPage() {
@@ -83,7 +83,13 @@ export default async function AdminUsersPage() {
 
                     {/* Rôle modifiable via formulaire */}
                     <td className="py-3 px-4">
-                      <form action={updateUserRoleAction.bind(null, profile.id)} className="flex items-center gap-1.5">
+                      <form 
+                        action={async (formData) => {
+                          "use server";
+                          await updateUserRoleAction(profile.id, formData);
+                        }} 
+                        className="flex items-center gap-1.5"
+                      >
                         <select
                           name="role"
                           defaultValue={profile.role}
@@ -122,7 +128,10 @@ export default async function AdminUsersPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Si en attente ou bloqué -> Bouton Valider */}
                         {profile.status !== 'approved' && (
-                          <form action={updateUserStatusAction.bind(null, profile.id, 'approved')}>
+                          <form action={async () => {
+                            "use server";
+                            await updateUserStatusAction(profile.id, 'approved');
+                          }}>
                             <button
                               type="submit"
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-[11px] transition-colors cursor-pointer shadow-xs"
@@ -136,7 +145,10 @@ export default async function AdminUsersPage() {
 
                         {/* Si approuvé -> Bouton Bloquer (accès temporaire) */}
                         {profile.status === 'approved' && (
-                          <form action={updateUserStatusAction.bind(null, profile.id, 'blocked')}>
+                          <form action={async () => {
+                            "use server";
+                            await updateUserStatusAction(profile.id, 'blocked');
+                          }}>
                             <button
                               type="submit"
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg text-[11px] transition-colors cursor-pointer shadow-xs"
@@ -150,7 +162,10 @@ export default async function AdminUsersPage() {
 
                         {/* Si bloqué -> Bouton Débloquer */}
                         {profile.status === 'blocked' && (
-                          <form action={updateUserStatusAction.bind(null, profile.id, 'approved')}>
+                          <form action={async () => {
+                            "use server";
+                            await updateUserStatusAction(profile.id, 'approved');
+                          }}>
                             <button
                               type="submit"
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-[11px] transition-colors cursor-pointer shadow-xs"
