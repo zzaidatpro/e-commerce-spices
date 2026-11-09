@@ -43,7 +43,7 @@ export async function registerUser(formData: FormData) {
   await supabase.from('profiles').insert({
     id: authData.user.id,
     email: email,
-    role: 'user',
+    role: 'client',
   });
 
   redirect('/dashboard');

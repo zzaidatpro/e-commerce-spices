@@ -382,6 +382,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/config-eslint
+      '@repo/lib':
+        specifier: 'workspace:'
+        version: link:../../packages/lib
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -510,6 +513,8 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
+
+  packages/lib: {}
 
   packages/ui:
     dependencies:

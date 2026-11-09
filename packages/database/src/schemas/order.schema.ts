@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Tables, TablesInsert, TablesUpdate } from '../types/db.types';
+import { Constants, Tables, TablesInsert, TablesUpdate } from '../types/db.types';
 
-export const statutCommandeSchema = z.enum(['en_attente', 'payee', 'expediee', 'livree', 'annulee']);
+export const statutCommandeSchema =  z.enum(Constants.public.Enums.statut_commande);
 
 // orders
 export const orderSchema = z.object({

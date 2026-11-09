@@ -9,7 +9,7 @@ export function ExploreMosaic() {
       <div className="mx-auto max-w-7xl space-y-10 px-4 lg:px-8">
         <h2 className="text-3xl font-semibold md:text-4xl">Explorez nos univers aromatiques</h2>
 
-        <ul className="grid gap-6 md:min-h-[560px] md:grid-cols-3 md:grid-rows-2">
+        <ul className="grid gap-6 md:min-h-140 md:grid-cols-3 md:grid-rows-2">
           {homeContent.mosaic.map((item, index) => (
             <li 
               key={item.href} 
@@ -30,7 +30,7 @@ export function ExploreMosaic() {
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
                 
                 <div className="absolute bottom-0 left-0 right-0 space-y-2 p-6 text-white">
                   <h3 className="text-xl font-bold tracking-tight md:text-2xl">{item.title}</h3>

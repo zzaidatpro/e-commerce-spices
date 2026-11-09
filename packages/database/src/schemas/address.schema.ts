@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Tables, TablesInsert, TablesUpdate } from '../types/db.types';
+import { Constants, Tables, TablesInsert, TablesUpdate } from '../types/db.types';
 
-export const typeEmplacementSchema = z.enum(['maison', 'magasin', 'depot']);
+export const typeEmplacementSchema = z.enum(Constants.public.Enums.type_emplacement);
 
 export const addressSchema = z.object({
   id: z.string().uuid(),

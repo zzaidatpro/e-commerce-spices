@@ -6,6 +6,8 @@ import SessionTimeMolecule from '@/components/molecules/SessionTimeMolecule';
 import OrderHistoryMolecule from '@/components/molecules/OrderHistoryMolecule';
 import {Save} from 'lucide-react';
 import GoogleMapFieldWithPreview from '@/components/molecules/googleMapField';
+import { ShoppingBag } from 'lucide-react';
+import Link from 'next/link';
 
 
 interface DashboardFormProps {
@@ -18,12 +20,13 @@ interface DashboardFormProps {
     date_naissance?: string;
     adresse?: string;
     url_google_maps?: string;
-    longitude? : number;
-    latitude? : number;
+    longitude?: number;
+    latitude?: number;
   };
+  initialOrders?: any[];
 }
 
-export default function DashboardForm({ initialProfile }: DashboardFormProps) {
+export default function DashboardForm({ initialProfile, initialOrders = [] }: DashboardFormProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -50,13 +53,24 @@ export default function DashboardForm({ initialProfile }: DashboardFormProps) {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 flex flex-col gap-6">
       
-      {/* En-tête de la page */}
-      <div className="flex flex-col gap-1 text-center sm:text-left border-b border-border pb-4">
+     {/* En-tête de la page */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+      <div className="flex flex-col gap-1 text-center sm:text-left">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Mon Tableau de Bord</h1>
         <p className="text-sm text-muted-foreground">
           Gérez vos informations personnelles, votre adresse de livraison et suivez vos commandes.
         </p>
       </div>
+      
+      {/* Bouton "Mes commandes" placé à droite */}
+      <Link
+        href="/orders"
+        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-shop-orange hover:bg-shop-orange/90 text-white font-semibold text-xs rounded-xl transition-colors shadow-xs self-center sm:self-auto"
+      >
+        <ShoppingBag className="w-4 h-4" />
+        <span>Mes commandes</span>
+      </Link>
+    </div>
 
       {/* Grid principale 2 Colonnes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -257,7 +271,7 @@ export default function DashboardForm({ initialProfile }: DashboardFormProps) {
           <SessionTimeMolecule />
 
           {/* Molécule historique des achats */}
-          <OrderHistoryMolecule />
+          <OrderHistoryMolecule orders={initialOrders} />
         </div>
 
       </div>

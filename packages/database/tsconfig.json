@@ -3,6 +3,11 @@
   "compilerOptions": {
     "baseUrl": "."
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../lib/src/history-page.ts",
+    "../lib/src/home.ts",
+    "../lib/src/laurier-data.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

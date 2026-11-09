@@ -5,7 +5,7 @@ export interface NavItem {
 
 export const headerData: NavItem[] = [
   { label: "Accueil", href: "/" }, 
-  { label: "Catalogue", href: "/catalog" },
-  { label: "Origines & Terroirs", href: "/origines" },
+  { label: "Nos Produits", href: "/products" },
+  { label: "Les origines", href: "/origines" },
   { label: "À propos", href: "/about" },
 ];

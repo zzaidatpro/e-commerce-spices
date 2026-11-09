@@ -45,6 +45,7 @@
     "@repo/database": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/lib": "workspace:",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

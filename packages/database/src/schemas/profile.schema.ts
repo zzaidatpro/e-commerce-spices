@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { Tables, TablesInsert, TablesUpdate } from '../types/db.types';
+import { Constants, Tables, TablesInsert, TablesUpdate } from '../types/db.types';
 
-export const typeRoleSchema = z.enum(['client', 'admin', 'livreur']);
+export const typeRoleSchema = z.enum(Constants.public.Enums.type_role);
+export const statutProfilSchema = z.enum(Constants.public.Enums.statut_profil);
 
 export const profileSchema = z.object({
   id: z.string().uuid(),
@@ -12,6 +13,7 @@ export const profileSchema = z.object({
   whatsapp: z.string().nullable(),
   date_naissance: z.string().nullable(),
   role: typeRoleSchema,
+  status: z.string(), 
   created_at: z.string(),
 }) satisfies z.ZodType<Tables<'profiles'>>;
 
@@ -24,6 +26,7 @@ export const profileInsertSchema = z.object({
   whatsapp: z.string().nullable().optional(),
   date_naissance: z.string().nullable().optional(),
   role: typeRoleSchema.optional(),
+  status: z.string().optional(),
   created_at: z.string().optional(),
 }) satisfies z.ZodType<TablesInsert<'profiles'>>;
 
@@ -36,5 +39,6 @@ export const profileUpdateSchema = z.object({
   whatsapp: z.string().nullable().optional(),
   date_naissance: z.string().nullable().optional(),
   role: typeRoleSchema.optional(),
+  status: z.string().optional(),
   created_at: z.string().optional(),
 }) satisfies z.ZodType<TablesUpdate<'profiles'>>;

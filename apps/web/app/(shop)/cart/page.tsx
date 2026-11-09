@@ -70,7 +70,7 @@ export default function CartPage() {
         </div>
 
         <Link
-          href="/catalog"
+          href="/products"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-shop-orange hover:underline w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
