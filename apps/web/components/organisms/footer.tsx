@@ -3,35 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
-
-const footerSections = [
-  {
-    title: 'Boutique',
-    links: [
-      { label: 'Tous les produits', href: '/shop' },
-      { label: 'Nouveautés', href: '/new' },
-      { label: 'Promotions', href: '/sales' },
-      { label: 'Histoires', href: '/histoire'}
-    ],
-  },
-  {
-    title: 'Catégories',
-    links: [
-      { label: 'Épices & Herbes', href: '/categories/epices' },
-      { label: 'Riz & Céréales', href: '/categories/riz' },
-      { label: 'Huiles & Sauces', href: '/categories/huiles' },
-    ],
-  },
-  {
-    title: 'Informations',
-    links: [
-      { label: 'À propos de nous', href: '/about' },
-      { label: 'Livraison & Retours', href: '/shipping' },
-      { label: 'FAQ', href: '/faq' },
-      { label: 'Contact', href: '/contact' },
-    ],
-  },
-];
+import { FAMILIES } from '@repo/lib';
+import { homeContent } from '@repo/database';
 
 export default function Footer() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -40,25 +13,53 @@ export default function Footer() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  // Génération des liens de catégories pointant vers /products?family=slug
+  const categoryLinks = FAMILIES
+    .filter((fam) => fam.slug.toLowerCase() !== 'tous') // Correction de la casse ('tous' en minuscule)
+    .map((fam) => ({
+      label: fam.label, // Garde la casse d'origine (ex: Épices, Poudres) ou .toLowerCase() si souhaité
+      href: `/products?family=${fam.slug}`, // 👈 Même logique que la mosaïque
+    }));
+
+  const footerSections = [
+    {
+      title: 'Boutique',
+      links: homeContent.footer.boutique,
+      isGrid: false,
+    },
+    {
+      title: 'Catégories',
+      links: categoryLinks,
+      isGrid: true, 
+    },
+    {
+      title: 'Informations',
+      links: homeContent.footer.informations,
+      isGrid: false,
+    },
+  ];
+
   return (
     <footer className="w-full border-t border-border bg-background text-foreground py-8 px-4">
       <div className="max-w-7xl mx-auto">
         
-        {/* --- VERSION DESKTOP (Grille standard) --- */}
+        {/* --- VERSION DESKTOP --- */}
         <div className="hidden md:grid md:grid-cols-3 gap-8 mb-8">
           {footerSections.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-black dark:text-foreground">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
                 {section.title}
               </h3>
-              <ul className="flex flex-col gap-2">
+              <ul className={section.isGrid ? "grid grid-cols-2 gap-x-4 gap-y-2" : "flex flex-col gap-2"}>
                 {section.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
                     <Link
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-shop-orange transition-colors"
+                      className="text-sm text-muted-foreground hover:text-shop-orange transition-colors inline-block relative group py-1"
                     >
-                      {link.label}
+                      <span className="absolute -bottom-0.5 left-1/2 w-0 h-0.5 bg-shop-orange group-hover:w-1/2 transition-all duration-300 group-hover:left-0" />
+                      <span className="absolute -bottom-0.5 right-1/2 w-0 h-0.5 bg-shop-orange group-hover:w-1/2 transition-all duration-300 group-hover:right-0" />
+                      {link.label} 
                     </Link>
                   </li>
                 ))}
@@ -67,7 +68,7 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* --- VERSION MOBILE --- */}
+        {/* --- VERSION MOBILE (Accordéon) --- */}
         <div className="block md:hidden w-full mb-8 divide-y divide-border border-y border-border">
           {footerSections.map((section, idx) => {
             const isOpen = openIndex === idx;
@@ -75,7 +76,7 @@ export default function Footer() {
               <div key={idx} className="py-2">
                 <button
                   onClick={() => toggleAccordion(idx)}
-                  className="w-full flex items-center justify-between text-sm font-semibold uppercase tracking-wider text-black dark:text-foreground py-2 text-left"
+                  className="w-full flex items-center justify-between text-sm font-semibold uppercase tracking-wider text-foreground py-2 text-left cursor-pointer"
                 >
                   <span>{section.title}</span>
                   <ChevronDown
@@ -86,13 +87,15 @@ export default function Footer() {
                 </button>
                 
                 {isOpen && (
-                  <ul className="flex flex-col gap-2 pt-1 pb-3 pl-2 animate-in fade-in duration-200">
+                  <ul className={section.isGrid ? "grid grid-cols-2 gap-x-4 gap-y-2 pt-1 pb-3 pl-2 animate-in fade-in duration-200" : "flex flex-col gap-2 pt-1 pb-3 pl-2 animate-in fade-in duration-200"}>
                     {section.links.map((link, linkIdx) => (
                       <li key={linkIdx}>
                         <Link
                           href={link.href}
-                          className="text-sm text-muted-foreground hover:text-shop-orange transition-colors"
+                          className="text-sm text-muted-foreground hover:text-shop-orange transition-colors inline-block relative group py-1"
                         >
+                          <span className="absolute -bottom-0.5 left-1/2 w-0 h-0.5 bg-shop-orange group-hover:w-1/2 transition-all duration-300 group-hover:left-0" />
+                          <span className="absolute -bottom-0.5 right-1/2 w-0 h-0.5 bg-shop-orange group-hover:w-1/2 transition-all duration-300 group-hover:right-0" />
                           {link.label}
                         </Link>
                       </li>

@@ -1,5 +1,5 @@
 export const FAMILIES = [
-  { slug: 'tous', label: 'Tous les produits' },
+  { slug: 'Tous', label: 'Tous les produits' },
   { slug: 'Epices', label: 'Epices' },
   { slug: 'Huiles', label: 'Huiles' },
   { slug: 'Graines', label: 'Graines' },

@@ -77,4 +77,28 @@ export const homeContent = {
       },
     ],
   },
+
+  footer: {
+    boutique: [
+      { label: 'Tous les produits', href: '/products' },
+      { label: 'Recettes Signatures', href: '/recette'},
+      { label: `L'histoire des épices`, href: '/histoire'}
+    ],
+    informations: [
+      { label: 'À propos de nous', href: '/about' },
+      { label: 'Livraison & Retours', href: '/shipping' },
+      { label: 'FAQ', href: '/faq' },
+      { label: 'Contact', href: '/contact' },
+    ],
+    Famille : [
+  { slug: 'tous', label: 'Tous les produits' },
+  { slug: 'epices', label: 'Epices' },
+  { slug: 'huiles', label: 'Huiles' },
+  { slug: 'graines', label: 'Graines' },
+  { slug: 'sels', label: 'Sels' },
+  { slug: 'aromes', label: 'Aromes' },
+  { slug: 'fruits', label: 'Fruits' },
+  { slug: 'herbes', label: 'Herbes' },
+] 
+  }
 } as const;
