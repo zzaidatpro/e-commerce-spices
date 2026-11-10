@@ -60,7 +60,7 @@ export default async function RegionDetailPage({ params }: PageProps) {
           return (
             <Link
               key={product.id || product.slug}
-              href={`/products/${product.slug}`}
+              href={`/p/${product.slug}`}
               className="group flex flex-col bg-card rounded-2xl border border-border/60 p-4 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-muted mb-3">

@@ -11,5 +11,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/account/:path*'], // seules les routes client sont protégées
+  matcher: ['/account/:path*', '/dashboard/:path*'], 
 };

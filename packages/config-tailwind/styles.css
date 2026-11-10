@@ -36,29 +36,28 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: #eaedd2; /*ensemble du projet */
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: #e1e6b7; /* cartes  */
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: #FFFFFF;
   --popover-foreground: oklch(0.145 0 0);
   --primary: #063c2B;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --muted: #e8dec8; /* Fonds secondaires */
   --muted-foreground: oklch(0.556 0 0);
-  --accent: #fcf0e4;
+  --accent: #eddecf;
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: #e6dcce; /* Bordures  */
+  --input: #dedad4;
   --ring: #063c2B;
   --radius: 0.625rem;
 }
-
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(22.005% 0.00312 16.954);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);

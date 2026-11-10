@@ -8,11 +8,11 @@ import AddToCartButton from '../atoms/AddToCartButton';
 export interface ProductItem {
   id: string;
   nom: string;
-  slug: string | null;
+  slug: string;
   region?: string | null;
   family?: string | null;
   image_url?: string | null;
-  prix_unitaire?: number | null;
+  prix_unitaire: number;
 }
 
 interface ProductCardProps {
@@ -20,13 +20,13 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const productSlug = product.slug || product.id;
+  const productSlug = product.slug;
   const price = product.prix_unitaire ?? 0;
 
   return (
     <div className="group bg-background rounded-xl border border-border/60 overflow-hidden flex flex-col justify-between hover:shadow-md transition-all duration-200">
       <Link
-        href={`/products/${productSlug}`}
+        href={`/p/${productSlug}`}
         className="flex flex-col flex-1"
       >
         <div className="relative aspect-square w-full bg-muted overflow-hidden">
@@ -77,8 +77,8 @@ export function ProductCard({ product }: ProductCardProps) {
           product={{
             id: product.id,
             name: product.nom,
-            slug: productSlug,
-            price: price,
+            slug: product.slug,
+            price: product.prix_unitaire,
             image: product.image_url || undefined,
             weight: product.region || undefined,
           }}

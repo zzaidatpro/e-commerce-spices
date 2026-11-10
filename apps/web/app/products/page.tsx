@@ -1,4 +1,3 @@
-// app/products/page.tsx
 import React from 'react';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';

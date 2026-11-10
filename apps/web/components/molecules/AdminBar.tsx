@@ -1,3 +1,4 @@
+// AdminBar.tsx
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -127,7 +128,8 @@ export const AdminBar = ({ className }: AdminBarProps) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    window.location.href = '/';
+    router.push('/');
+    router.refresh();
   };
 
   return (
@@ -240,7 +242,17 @@ export const AdminBar = ({ className }: AdminBarProps) => {
                 </div>
 
                 <div className="flex flex-col gap-1 text-left">
-                  <label className="text-xs font-medium text-foreground">Mot de passe</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-foreground">Mot de passe</label>
+                    {/* Lien Mot de passe oublié */}
+                    <Link
+                      href="/reset-password"
+                      onClick={() => setActiveForm(null)}
+                      className="text-[11px] text-shop-orange hover:underline font-medium"
+                    >
+                      Oublié ?
+                    </Link>
+                  </div>
                   <div className="relative flex items-center">
                     <input
                       type={showPassword ? "text" : "password"}

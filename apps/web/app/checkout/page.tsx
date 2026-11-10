@@ -27,22 +27,20 @@ export default function CheckoutPage() {
   const [supabase] = useState(() => createUserClient());
   const [loadingAddress, setLoadingAddress] = useState(true);
 
-  // État du formulaire d'adresse
+  // Formulaire adresse
   const [typeLieu, setTypeLieu] = useState<'maison' | 'magasin' | 'depot'>('maison');
   const [adresseComplete, setAdresseComplete] = useState('');
   const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
   
-  // Mode édition et avertissement
   const [isEditingAddress, setIsEditingAddress] = useState(false);
 
-  // Charger l'adresse existante du profil ou de la dernière adresse au chargement
   useEffect(() => {
     const fetchUserAddress = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Récupérer la dernière adresse de livraison enregistrée
+        // dernière adresse de livraison connue
         const { data: addressData } = await supabase
           .from('adresses_livraison')
           .select('*')
@@ -56,7 +54,7 @@ export default function CheckoutPage() {
           setTypeLieu(addressData.type_lieu || 'maison');
           setUrlGoogleMaps(addressData.url_google_maps || '');
         } else {
-          // Si aucune adresse n'existe, on active le mode édition par défaut
+          
           setIsEditingAddress(true);
         }
       } catch (err) {
@@ -126,7 +124,7 @@ export default function CheckoutPage() {
           href="/dashboard"
           className="mt-4 px-6 py-3 bg-shop-orange text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-shop-orange/90 transition-colors shadow-xs"
         >
-          Voir mes commandes sur le Dashboard
+          Voir mes commandes 
         </Link>
       </div>
     );
@@ -167,7 +165,7 @@ export default function CheckoutPage() {
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-shop-orange" />
-                <span>Adresse de livraison enregistrée</span>
+                <span>Adresse de livraison connue</span>
               </h2>
               {!loadingAddress && !isEditingAddress && (
                 <button
@@ -207,7 +205,7 @@ export default function CheckoutPage() {
               /* Mode Édition avec avertissement et enregistrement */
               <div className="flex flex-col gap-4 p-4 bg-secondary/10 border border-shop-orange/40 rounded-xl">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-foreground">Type de lieu *</label>
+                  <label className="text-xs font-semibold text-foreground">Lieu *</label>
                   <select
                     value={typeLieu}
                     onChange={(e) => setTypeLieu(e.target.value as any)}
@@ -245,7 +243,7 @@ export default function CheckoutPage() {
                 {/* Avertissement avant sauvegarde */}
                 <div className="p-3 bg-shop-orange/10 border border-shop-orange/30 text-shop-orange text-xs rounded-lg flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>En confirmant ces modifications, cette nouvelle adresse sera enregistrée et mise à jour sur votre compte.</span>
+                  <span>En confirmant ces modifications, votre nouvelle adresse sera enregistrée et mise à jour sur votre compte.</span>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { createUserClient } from '@repo/database/client';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -9,22 +10,22 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialisation du client Supabase
+  const [supabase] = useState(() => createUserClient());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      // test avec fetch avant de mettre un resetPasswordAction
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      // Appel direct à Supabase pour l'envoi de l'e-mail de réinitialisation
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Une erreur est survenue lors de l'envoi de l'e-mail.");
+      if (error) {
+        throw new Error(error.message);
       }
 
       setIsSubmitted(true);
@@ -58,10 +59,10 @@ export default function ResetPasswordPage() {
             Un e-mail de réinitialisation a été envoyé à <strong>{email}</strong> si ce compte existe.
           </div>
           <Link
-            href="/login"
+            href="/"
             className="text-sm font-medium text-shop-orange hover:underline"
           >
-            Retour à la connexion
+            Retour à l'accueil
           </Link>
         </div>
       ) : (
@@ -84,7 +85,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 mt-2 bg-shop-orange hover:bg-shop-orange/90 text-white font-medium text-sm rounded-md transition-colors disabled:opacity-50"
+            className="w-full py-2.5 mt-2 bg-shop-orange hover:bg-shop-orange/90 text-white font-medium text-sm rounded-md transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? 'Envoi en cours...' : 'Envoyer le lien'}
           </button>
@@ -93,8 +94,8 @@ export default function ResetPasswordPage() {
 
       {!isSubmitted && (
         <div className="text-center text-xs text-muted-foreground">
-          <Link href="/login" className="text-shop-orange hover:underline font-medium">
-            Retour à la connexion
+          <Link href="/" className="text-shop-orange hover:underline font-medium">
+            Retour à l'accueil
           </Link>
         </div>
       )}
