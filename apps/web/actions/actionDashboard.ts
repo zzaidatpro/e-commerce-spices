@@ -1,31 +1,12 @@
 "use server";
 
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from '@repo/database/server';
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export async function updateProfile(formData: FormData) {
-  const cookieStore = await cookies();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          } catch {}
-        },
-      },
-    },
-  );
-
+  const supabase = await createClient()
   const {
     data: { user },
     error: userError,
@@ -35,7 +16,6 @@ export async function updateProfile(formData: FormData) {
     throw new Error("Utilisateur non authentifié.");
   }
 
-  // Concaténation pour adresse_livraison
   const numero = formData.get("numero") as string;
   const rue = formData.get("rue") as string;
   const cite = formData.get("cite") as string;

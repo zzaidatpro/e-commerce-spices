@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useCartStore } from '@/store/useCartStore';
+import { useEffect, useState } from "react";
+import { useCartStore } from "@/lib/useCartStore";
 
 export const useCart = () => {
   const [isHydrated, setIsHydrated] = useState(false);

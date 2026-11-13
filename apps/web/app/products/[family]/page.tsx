@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createUserClient } from '@repo/database/client';
 import { ArrowLeft, Tag, MapPin } from 'lucide-react';
-import AddToCartButton from '@/components/atoms/AddToCartButton'; // 👈 Import du composant
+import AddToCartButton from '@/components/atoms/AddToCartButton'; 
 
 interface ProductDetailPageProps {
   params: Promise<{

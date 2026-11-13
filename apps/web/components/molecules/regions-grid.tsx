@@ -1,6 +1,6 @@
 import { Badge } from "@repo/ui";
 import Image from "next/image";
-import { historyPage } from "@repo/database";
+import { historyPage } from "@repo/lib";
 import {Card, CardTitle, CardContent, CardHeader, CardFooter} from "@repo/ui"
 
 export function RegionsGrid() {

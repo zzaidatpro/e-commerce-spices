@@ -9,7 +9,7 @@ import AdminBar from "../molecules/AdminBar";
 import { Badge } from "@repo/ui";
 import { headerData } from "../../../../packages/lib/src/headerData";
 import { CartSheet } from "../molecules/CartSheet";
-import { useCart } from "@/hooks/useCart";
+import { useCart } from "@/lib/useCart";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);

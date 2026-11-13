@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@repo/ui";
-import { homeContent } from "@repo/database";
+import { homeContent } from "@repo/lib";
 
 export function ExploreMosaic() {
   return (

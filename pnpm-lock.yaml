@@ -446,6 +446,9 @@ importers:
       '@repo/config-ts':
         specifier: workspace:*
         version: link:../config-ts
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../config-eslint

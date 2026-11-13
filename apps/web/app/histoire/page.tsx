@@ -3,7 +3,7 @@ import { HistoryHero } from "@/components/molecules/history-hero";
 import { JourneyTimeline } from "@/components/molecules/journey-timeline";
 import { HistoricalFigures } from "@/components/molecules/historical-figures";
 import { RegionsGrid } from "@/components/molecules/regions-grid";
-import { historyPage } from "@repo/database";
+import { historyPage } from "@repo/lib";
 
 export const metadata: Metadata = { title: "Histoire des épices" };
 

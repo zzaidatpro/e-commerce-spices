@@ -1,27 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useCart } from '@/hooks/useCart';
-import { 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ShoppingBag, 
-  ArrowLeft, 
-  ArrowRight, 
-  ShieldCheck, 
-  Truck, 
-  Tag 
-} from 'lucide-react';
+import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useCart } from "@/lib/useCart";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  Truck,
+  Tag,
+} from "lucide-react";
 
 export default function CartPage() {
-  const { cart, updateQuantity, removeItem, clearCart, totalPrice, totalItems, isHydrated } = useCart();
-  const [promoCode, setPromoCode] = useState('');
+  const { cart, updateQuantity, removeItem, clearCart, totalPrice, totalItems, isHydrated } =
+    useCart();
+  const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [promoError, setPromoError] = useState('');
-  const [promoSuccess, setPromoSuccess] = useState('');
+  const [promoError, setPromoError] = useState("");
+  const [promoSuccess, setPromoSuccess] = useState("");
 
   // Frais de livraison (offerts à partir de 5000 Da)
   const shippingThreshold = 5000;
@@ -29,15 +30,15 @@ export default function CartPage() {
 
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    setPromoError('');
-    setPromoSuccess('');
+    setPromoError("");
+    setPromoSuccess("");
 
-    if (promoCode.trim().toUpperCase() === 'TEJ10') {
+    if (promoCode.trim().toUpperCase() === "TEJ10") {
       const discountAmount = totalPrice * 0.1;
       setDiscount(discountAmount);
-      setPromoSuccess('Code promo appliqué (-10%)');
+      setPromoSuccess("Code promo appliqué (-10%)");
     } else {
-      setPromoError('Code promo invalide.');
+      setPromoError("Code promo invalide.");
     }
   };
 
@@ -64,8 +65,8 @@ export default function CartPage() {
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {totalItems === 0
-              ? 'Votre panier est actuellement vide.'
-              : `${totalItems} article${totalItems > 1 ? 's' : ''} dans votre panier.`}
+              ? "Votre panier est actuellement vide."
+              : `${totalItems} article${totalItems > 1 ? "s" : ""} dans votre panier.`}
           </p>
         </div>
 
@@ -100,7 +101,6 @@ export default function CartPage() {
       ) : (
         /* Grille Panier : Liste des produits à gauche, Récapitulatif à droite */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           {/* Liste des articles (8 colonnes) */}
           <div className="lg:col-span-8 flex flex-col gap-4">
             <div className="flex items-center justify-between px-2">
@@ -125,12 +125,7 @@ export default function CartPage() {
                   <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-secondary/40 shrink-0 border border-border/40">
                       {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={item.image} alt={item.name} fill className="object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground">
                           Tej Patta
@@ -218,7 +213,9 @@ export default function CartPage() {
                 <ShieldCheck className="w-5 h-5 text-shop-dark-green shrink-0" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-foreground">Paiement sécurisé</h4>
-                  <p className="text-[11px] text-muted-foreground">Paiement à la livraison ou en ligne</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Paiement à la livraison ou en ligne
+                  </p>
                 </div>
               </div>
             </div>
@@ -265,7 +262,10 @@ export default function CartPage() {
               </div>
 
               {/* Formulaire Code Promo */}
-              <form onSubmit={handleApplyPromo} className="flex flex-col gap-2 pt-2 border-t border-border/60">
+              <form
+                onSubmit={handleApplyPromo}
+                className="flex flex-col gap-2 pt-2 border-t border-border/60"
+              >
                 <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5 text-shop-orange" />
                   <span>Code de réduction</span>
@@ -285,8 +285,12 @@ export default function CartPage() {
                     Appliquer
                   </button>
                 </div>
-                {promoError && <span className="text-[11px] text-red-500 font-medium">{promoError}</span>}
-                {promoSuccess && <span className="text-[11px] text-green-600 font-medium">{promoSuccess}</span>}
+                {promoError && (
+                  <span className="text-[11px] text-red-500 font-medium">{promoError}</span>
+                )}
+                {promoSuccess && (
+                  <span className="text-[11px] text-green-600 font-medium">{promoSuccess}</span>
+                )}
               </form>
 
               {/* Bouton passer à la commande */}
@@ -299,7 +303,6 @@ export default function CartPage() {
               </Link>
             </div>
           </div>
-
         </div>
       )}
     </div>

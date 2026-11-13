@@ -1,4 +1,4 @@
-﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -379,18 +379,30 @@ export type Database = {
     };
     Functions: {
       a_achete_produit: { Args: { p_produit_id: string }; Returns: boolean };
+      create_order: {
+        Args: {
+          p_adresse: string;
+          p_items: Json;
+          p_type_lieu: Database['public']['Enums']['type_emplacement'];
+          p_url: string;
+        };
+        Returns: string;
+      };
+      est_admin: { Args: never; Returns: boolean };
       est_staff: { Args: never; Returns: boolean };
       is_admin_or_livreur: {
         Args: { allowed_roles: string[] };
         Returns: boolean;
       };
+      mon_role: { Args: never; Returns: string };
+      mon_statut: { Args: never; Returns: string };
       valider_et_payer_commande: {
         Args: { p_order_id: string };
         Returns: undefined;
       };
     };
     Enums: {
-      statut_commande: 'en_attente' | 'payée' | 'expediée' | 'livrée' | 'annulée';
+      statut_commande: 'en_attente' | 'pay├⌐e' | 'exp├⌐di├⌐e' | 'livr├⌐e' | 'annul├⌐e';
       statut_profil: 'pending' | 'approved' | 'blocked';
       type_emplacement: 'maison' | 'magasin' | 'depot';
       type_role: 'client' | 'admin' | 'livreur' | 'manager';
@@ -516,7 +528,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      statut_commande: ['en_attente', 'payée', 'expediée', 'livrée', 'annulée'],
+      statut_commande: ['en_attente', 'pay├⌐e', 'exp├⌐di├⌐e', 'livr├⌐e', 'annul├⌐e'],
       statut_profil: ['pending', 'approved', 'blocked'],
       type_emplacement: ['maison', 'magasin', 'depot'],
       type_role: ['client', 'admin', 'livreur', 'manager'],

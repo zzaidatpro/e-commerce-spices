@@ -1,5 +1,5 @@
 import { Leaf, MapPin, Package } from "lucide-react";
-import { homeContent } from "@repo/database";
+import { homeContent } from "@repo/lib";
 
 const icons = [MapPin, Package, Leaf];
 

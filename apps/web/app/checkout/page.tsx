@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useTransition } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useCart } from '@/hooks/useCart';
-import { createOrderAction } from '@/actions/createOrder';
-import { createUserClient } from '@repo/database/client';
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  ShieldCheck, 
-  MapPin, 
+import React, { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useCart } from "@/lib/useCart";
+import { createOrderAction } from "@/actions/createOrder";
+import { createUserClient } from "@repo/database/client";
+import {
+  ArrowLeft,
+  CheckCircle,
+  ShieldCheck,
+  MapPin,
   AlertCircle,
   Edit3,
   Save,
-  Check
-} from 'lucide-react';
+  Check,
+} from "lucide-react";
 
 export default function CheckoutPage() {
   const { cart, totalPrice, totalItems, clearCart, isHydrated } = useCart();
@@ -28,33 +28,34 @@ export default function CheckoutPage() {
   const [loadingAddress, setLoadingAddress] = useState(true);
 
   // Formulaire adresse
-  const [typeLieu, setTypeLieu] = useState<'maison' | 'magasin' | 'depot'>('maison');
-  const [adresseComplete, setAdresseComplete] = useState('');
-  const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
-  
+  const [typeLieu, setTypeLieu] = useState<"maison" | "magasin" | "depot">("maison");
+  const [adresseComplete, setAdresseComplete] = useState("");
+  const [urlGoogleMaps, setUrlGoogleMaps] = useState("");
+
   const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   useEffect(() => {
     const fetchUserAddress = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
         // dernière adresse de livraison connue
         const { data: addressData } = await supabase
-          .from('adresses_livraison')
-          .select('*')
-          .eq('profile_id', user.id)
-          .order('created_at', { ascending: false })
+          .from("adresses_livraison")
+          .select("*")
+          .eq("profile_id", user.id)
+          .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         if (addressData) {
-          setAdresseComplete(addressData.adresse_complete || '');
-          setTypeLieu(addressData.type_lieu || 'maison');
-          setUrlGoogleMaps(addressData.url_google_maps || '');
+          setAdresseComplete(addressData.adresse_complete || "");
+          setTypeLieu(addressData.type_lieu || "maison");
+          setUrlGoogleMaps(addressData.url_google_maps || "");
         } else {
-          
           setIsEditingAddress(true);
         }
       } catch (err) {
@@ -76,7 +77,7 @@ export default function CheckoutPage() {
     setErrorMessage(null);
 
     if (cart.length === 0) {
-      setErrorMessage('Votre panier est vide.');
+      setErrorMessage("Votre panier est vide.");
       return;
     }
 
@@ -103,7 +104,7 @@ export default function CheckoutPage() {
           clearCart();
         }
       } catch (err: any) {
-        setErrorMessage(err.message || 'Une erreur est survenue lors de la commande.');
+        setErrorMessage(err.message || "Une erreur est survenue lors de la commande.");
       }
     });
   };
@@ -118,13 +119,14 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Commande enregistrée !</h1>
         <p className="text-sm text-muted-foreground max-w-md">
-          Votre commande a été enregistrée avec succès. Notre équipe prendra contact avec vous pour la livraison.
+          Votre commande a été enregistrée avec succès. Notre équipe prendra contact avec vous pour
+          la livraison.
         </p>
         <Link
           href="/dashboard"
           className="mt-4 px-6 py-3 bg-shop-orange text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-shop-orange/90 transition-colors shadow-xs"
         >
-          Voir mes commandes 
+          Voir mes commandes
         </Link>
       </div>
     );
@@ -133,7 +135,10 @@ export default function CheckoutPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <div className="mb-8">
-        <Link href="/cart" className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-shop-orange hover:underline">
+        <Link
+          href="/cart"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-shop-orange hover:underline"
+        >
           <ArrowLeft className="w-4 h-4" />
           Retour au panier
         </Link>
@@ -157,8 +162,10 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+      <form
+        onSubmit={handleSubmitOrder}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+      >
         {/* Colonne Gauche : Gestion de l'Adresse (7 cols) */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           <div className="p-6 bg-background border border-border/80 rounded-2xl shadow-xs flex flex-col gap-5 text-left">
@@ -187,10 +194,19 @@ export default function CheckoutPage() {
               /* Affichage de l'adresse enregistrée avec possibilité de vérification */
               <div className="flex flex-col gap-4 p-4 bg-secondary/20 border border-border/60 rounded-xl">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Type de lieu : {typeLieu}</span>
-                  <p className="text-sm font-medium text-foreground">{adresseComplete || "Aucune adresse enregistrée."}</p>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Type de lieu : {typeLieu}
+                  </span>
+                  <p className="text-sm font-medium text-foreground">
+                    {adresseComplete || "Aucune adresse enregistrée."}
+                  </p>
                   {urlGoogleMaps && (
-                    <a href={urlGoogleMaps} target="_blank" rel="noreferrer" className="text-xs text-shop-orange underline mt-1">
+                    <a
+                      href={urlGoogleMaps}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-shop-orange underline mt-1"
+                    >
                       Voir sur Google Maps
                     </a>
                   )}
@@ -218,7 +234,9 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-foreground">Adresse complète *</label>
+                  <label className="text-xs font-semibold text-foreground">
+                    Adresse complète *
+                  </label>
                   <textarea
                     required
                     rows={3}
@@ -230,7 +248,9 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-foreground">Lien Google Maps (Optionnel)</label>
+                  <label className="text-xs font-semibold text-foreground">
+                    Lien Google Maps (Optionnel)
+                  </label>
                   <input
                     type="url"
                     value={urlGoogleMaps}
@@ -243,7 +263,10 @@ export default function CheckoutPage() {
                 {/* Avertissement avant sauvegarde */}
                 <div className="p-3 bg-shop-orange/10 border border-shop-orange/30 text-shop-orange text-xs rounded-lg flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>En confirmant ces modifications, votre nouvelle adresse sera enregistrée et mise à jour sur votre compte.</span>
+                  <span>
+                    En confirmant ces modifications, votre nouvelle adresse sera enregistrée et mise
+                    à jour sur votre compte.
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
@@ -283,11 +306,15 @@ export default function CheckoutPage() {
                 <div key={item.id} className="flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2.5 truncate">
                     <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-secondary/40 shrink-0 border">
-                      {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
+                      {item.image && (
+                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      )}
                     </div>
                     <div className="flex flex-col truncate">
                       <span className="font-bold text-foreground truncate">{item.name}</span>
-                      <span className="text-[10px] text-muted-foreground">Qté : {item.quantity}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Qté : {item.quantity}
+                      </span>
                     </div>
                   </div>
                   <span className="font-extrabold text-foreground shrink-0">
@@ -305,12 +332,18 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Frais de livraison</span>
                 <span className="font-semibold text-foreground">
-                  {shippingCost === 0 ? <span className="text-green-600 font-bold">Offerte</span> : `${shippingCost} Da`}
+                  {shippingCost === 0 ? (
+                    <span className="text-green-600 font-bold">Offerte</span>
+                  ) : (
+                    `${shippingCost} Da`
+                  )}
                 </span>
               </div>
               <div className="border-t border-border pt-3 mt-1 flex items-center justify-between">
                 <span className="text-base font-bold text-foreground">Total à payer</span>
-                <span className="text-xl font-extrabold text-shop-orange">{finalTotal.toFixed(2)} Da</span>
+                <span className="text-xl font-extrabold text-shop-orange">
+                  {finalTotal.toFixed(2)} Da
+                </span>
               </div>
             </div>
 
@@ -319,12 +352,13 @@ export default function CheckoutPage() {
               disabled={isPending || isEditingAddress}
               className="w-full py-3.5 bg-shop-orange hover:bg-shop-orange/90 text-white font-bold text-sm rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {isPending ? 'Enregistrement de la commande...' : 'Confirmer et passer la commande'}
+              {isPending ? "Enregistrement de la commande..." : "Confirmer et passer la commande"}
             </button>
 
             {isEditingAddress && (
               <span className="text-[11px] text-amber-600 text-center font-medium">
-                Veuillez confirmer ou annuler la modification de l'adresse avant de valider la commande.
+                Veuillez confirmer ou annuler la modification de l'adresse avant de valider la
+                commande.
               </span>
             )}
 
@@ -334,7 +368,6 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-
       </form>
     </div>
   );

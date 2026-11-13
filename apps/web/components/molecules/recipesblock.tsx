@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { homeContent } from "@repo/database";
+import { homeContent } from "@repo/lib";
 
 export function RecipesBlock() {
   const { recipes } = homeContent;

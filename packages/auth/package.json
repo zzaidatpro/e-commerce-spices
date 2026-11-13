@@ -15,6 +15,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/config-ts": "workspace:*",
+    "@repo/database": "workspace:*",
     "eslint": "9.9.0",
     "typescript": "^5.6.3",
     "next": "catalog:"

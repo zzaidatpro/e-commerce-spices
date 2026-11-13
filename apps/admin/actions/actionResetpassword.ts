@@ -1,35 +1,19 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@repo/database/server';
 
 export async function requestPasswordReset(formData: FormData) {
-  const email = formData.get('email') as string;
+  const email = String(formData.get('email') ?? '').trim();
+  if (!email) return { error: 'Veuillez saisir votre adresse email.' };
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { 
-      auth : {
-        flowType : 'pkce',
-
-      },  
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll() {},
-      },
-    }
-  );
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001';
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    
-    redirectTo: `http://localhost:3001/auth/callback?next=/resetPassword/update`,
+    redirectTo: `${siteUrl}/auth/callback?next=/resetPassword/update`,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
-  return { success: "Email de réinitialisation envoyé avec succès !" };
+  return { success: 'Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.' };
 }

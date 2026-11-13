@@ -12,7 +12,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "../../packages/auth/src/proxy.ts",
+    "../../packages/auth/src/notused/proxy.ts",
     "../../packages/lib/src/headerData.ts"
   ],
   "exclude": ["node_modules"]

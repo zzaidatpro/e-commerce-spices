@@ -1,34 +1,33 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@supabase/ssr';
+import { requireRole } from './helper';
+import { STAFF_ROLES } from '@/lib/permissions';
 
-export async function createProduct(formData: FormData) {
-  const name = formData.get('name') as string;
-  const price = parseFloat(formData.get('price') as string);
-  const stock = parseInt(formData.get('stock') as string, 10);
-  const category = formData.get('category') as string;
+export async function saveProductAction(formData: FormData) {
+  const auth = await requireRole(STAFF_ROLES).catch(() => null);
+  if (!auth) return { error: 'Accès refusé.' };
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll() {},
-      },
-    }
-  );
+  const id = String(formData.get('id') ?? '') || null;
+  const nom = String(formData.get('nom') ?? '').trim();
+  const slug = String(formData.get('slug') ?? '').trim();
+  const prix_unitaire = Number(formData.get('prix_unitaire'));
+  const family = String(formData.get('family') ?? '').trim() || null;
+  const region = String(formData.get('region') ?? '').trim() || null;
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const image_url = String(formData.get('image_url') ?? '').trim() || null;
 
-  const { error } = await supabase.from('products').insert([
-    { name, price, stock, category }
-  ]);
-
-  if (error) {
-    return { error: error.message };
+  if (!nom || !slug || !Number.isFinite(prix_unitaire) || prix_unitaire < 0) {
+    return { error: 'Nom, slug et prix valide requis.' };
   }
+
+  const payload = { nom, slug, prix_unitaire, family, region, description, image_url };
+
+  const { error } = id
+    ? await auth.supabase.from('produits').update(payload).eq('id', id)
+    : await auth.supabase.from('produits').insert(payload);
+
+  if (error) return { error: error.message };
 
   revalidatePath('/admin/products');
   return { success: true };

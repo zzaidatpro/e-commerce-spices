@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { useCart } from "@/lib/useCart";
 
 interface CartSheetProps {
   isOpen: boolean;
@@ -19,7 +19,6 @@ export const CartSheet = ({ isOpen, onClose }: CartSheetProps) => {
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-background h-full shadow-2xl flex flex-col border-l border-border animate-in slide-in-from-right duration-300">
-        
         {/* En-tête du panier */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-secondary/10">
           <div className="flex items-center gap-2">
@@ -54,19 +53,14 @@ export const CartSheet = ({ isOpen, onClose }: CartSheetProps) => {
             </div>
           ) : (
             cart.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className="flex items-center gap-3 p-3 bg-background border border-border/80 rounded-2xl shadow-2xs hover:border-border transition-colors"
               >
                 {/* Image du produit */}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-secondary/40 shrink-0 border border-border/40">
                   {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground font-medium">
                       Tej Patta
@@ -76,13 +70,9 @@ export const CartSheet = ({ isOpen, onClose }: CartSheetProps) => {
 
                 {/* Détails du produit */}
                 <div className="flex flex-col gap-1 text-left flex-1 min-w-0">
-                  <h4 className="text-xs font-bold text-foreground line-clamp-1">
-                    {item.name}
-                  </h4>
+                  <h4 className="text-xs font-bold text-foreground line-clamp-1">{item.name}</h4>
                   {item.weight && (
-                    <span className="text-[11px] text-muted-foreground">
-                      {item.weight}
-                    </span>
+                    <span className="text-[11px] text-muted-foreground">{item.weight}</span>
                   )}
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs font-semibold text-muted-foreground">
@@ -148,7 +138,7 @@ export const CartSheet = ({ isOpen, onClose }: CartSheetProps) => {
                 <span>Voir le panier complet</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              
+
               <button
                 onClick={clearCart}
                 className="w-full py-1 text-[11px] text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
@@ -158,7 +148,6 @@ export const CartSheet = ({ isOpen, onClose }: CartSheetProps) => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

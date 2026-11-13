@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { FAMILIES } from '@repo/lib';
-import { homeContent } from '@repo/database';
+import { homeContent } from '@repo/lib';
 
 export default function Footer() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);

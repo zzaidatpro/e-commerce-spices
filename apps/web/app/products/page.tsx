@@ -1,33 +1,18 @@
 import React from 'react';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@repo/database/server';
 import ProductCatalogClient from '@/components/molecules/ProductCatalogClient';
+import { getFavoriIds } from '@/lib/favoris';
 
 interface ProductsPageProps {
-  searchParams: Promise<{
-    family?: string;
-  }>;
+  searchParams: Promise<{ family?: string }>;
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const resolvedSearchParams = await searchParams;
-  // Récupère la famille depuis l'URL (ex: /products?family=poudres), ou 'tous' par défaut
   const initialFamilyQuery = resolvedSearchParams.family || 'tous';
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
-  // Récupération globale de tous les produits depuis Supabase
   const { data: products, error } = await supabase
     .from('produits')
     .select('*')
@@ -36,6 +21,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (error) {
     console.error('Erreur lors de la récupération des produits:', error.message);
   }
+
+  const favoriIds = await getFavoriIds();
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 flex flex-col gap-8 min-h-screen">
@@ -46,10 +33,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </p>
       </div>
 
-      {/* On transmet la famille de l'URL au composant client */}
-      <ProductCatalogClient 
-        initialProducts={products || []} 
-        initialFamily={initialFamilyQuery} 
+      <ProductCatalogClient
+        initialProducts={products ?? []}
+        initialFamily={initialFamilyQuery}
+        favoriIds={favoriIds}
       />
     </div>
   );

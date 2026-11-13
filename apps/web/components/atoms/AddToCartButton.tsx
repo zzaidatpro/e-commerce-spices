@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ShoppingBag } from 'lucide-react';
-import { useCartStore } from '@/store/useCartStore';
-import { CartItem } from '@repo/database';
+import React from "react";
+import { ShoppingBag } from "lucide-react";
+import { useCartStore } from "@/lib/useCartStore";
+import { CartItem } from "@repo/database";
 
 interface AddToCartButtonProps {
-  product: Omit<CartItem, 'quantity'>;
+  product: Omit<CartItem, "quantity">;
   onAdded?: () => void;
   className?: string;
 }
@@ -15,11 +15,11 @@ export const AddToCartButton = ({ product, onAdded, className }: AddToCartButton
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     e.stopPropagation();
-    
+
     addItem(product, 1);
-    
+
     if (onAdded) {
       onAdded();
     }

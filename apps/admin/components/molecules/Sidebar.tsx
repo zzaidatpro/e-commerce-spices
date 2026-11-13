@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, ShoppingBag, Users, Settings, Package } from 'lucide-react';
-import { cn } from '@repo/ui'; // ou vos classes utilitaires
+import { cn } from '@repo/ui'; 
 
 interface SidebarProps {
   role: string;
@@ -13,7 +13,6 @@ interface SidebarProps {
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
 
-  // Définir les liens communs ou spécifiques
   const menuItems = [
     {
       label: 'Tableau de bord',
@@ -23,7 +22,7 @@ export default function Sidebar({ role }: SidebarProps) {
     },
     {
       label: 'Catalogue & Produits',
-      href: '/admin/products', // ou partagé
+      href: '/admin/products', 
       icon: Package,
       roles: ['admin', 'manager'],
     },
@@ -35,22 +34,24 @@ export default function Sidebar({ role }: SidebarProps) {
     },
     {
       label: 'Gestion des Utilisateurs',
-      href: '/admin/users', // Réservé strictement aux admins
+      href: '/admin/users', 
       icon: Users,
-      roles: ['admin'], // <--- Visible uniquement par l'admin
+      roles: ['admin'],
     },
     {
       label: 'Paramètres système',
-      href: '/admin/settings', // Réservé strictement aux admins
+      href: '/admin/settings', 
       icon: Settings,
-      roles: ['admin'], // <--- Visible uniquement par l'admin
+      roles: ['admin'], 
     },
   ];
+  const isActive = (href: string) =>
+    href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(href + '/');
 
   return (
     <nav className="flex flex-col gap-1">
       {menuItems
-        .filter((item) => item.roles.includes(role)) // Filtrage conditionnel selon le rôle
+        .filter((item) => item.roles.includes(role)) 
         .map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

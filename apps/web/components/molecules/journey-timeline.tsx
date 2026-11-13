@@ -1,4 +1,4 @@
-import { historyPage } from "@repo/database";
+import { historyPage } from "@repo/lib";
 
 export function JourneyTimeline() {
   return (

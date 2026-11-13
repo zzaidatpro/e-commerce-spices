@@ -1,67 +1,46 @@
 'use server';
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@repo/database/server';
 
 export async function registerUser(formData: FormData) {
-  const nom = formData.get('nom') as string;
-  const prenom = formData.get('prenom') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const telephone = formData.get('telephone') as string;
-  const whatsapp = formData.get('whatsapp') as string;
-  const date_naissance = formData.get('date_naissance') as string;
-  const role = formData.get('role') as string;
+  const nom = String(formData.get('nom') ?? '').trim();
+  const prenom = String(formData.get('prenom') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim();
+  const password = String(formData.get('password') ?? '');
+  const telephone = String(formData.get('telephone') ?? '').trim();
+  const whatsapp = String(formData.get('whatsapp') ?? '').trim();
+  const date_naissance = String(formData.get('date_naissance') ?? '');
 
   if (!nom || !prenom || !email || !password || !telephone || !date_naissance) {
     return { error: 'Veuillez remplir tous les champs obligatoires.' };
   }
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {}
-        },
-      },
-    }
-  );
+  if (password.length < 8) {
+    return { error: 'Le mot de passe doit contenir au moins 8 caractères.' };
+  }
 
+  const supabase = await createClient();
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        nom,
+        prenom,
+        telephone,
+        whatsapp: whatsapp || telephone,
+        date_naissance,
+      },
+    },
   });
 
   if (authError || !authData.user) {
-    return { error: authError?.message || "Erreur lors de la création de l'utilisateur." };
+    return { error: authError?.message ?? 'Erreur lors de la création du compte.' };
   }
 
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      id: authData.user.id,
-      email,
-      nom,
-      prenom,
-      telephone,
-      whatsapp: whatsapp || telephone, 
-      date_naissance,
-      role: role || 'manager',
-      status: 'pending', 
-    });
-
-  if (profileError) {
-    return { error: profileError.message };
-  }
-
-  return { success: true };
+  return {
+    success: true,
+    message: 'Compte créé. Il sera activé après validation par un administrateur.',
+  };
 }

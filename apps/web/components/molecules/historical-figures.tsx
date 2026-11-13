@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui";
-import { historyPage } from "@repo/database";
+import { historyPage } from "@repo/lib";
 
 export function HistoricalFigures() {
   return (

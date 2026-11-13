@@ -1,50 +1,38 @@
 'use server';
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { createClient } from '@repo/database/server';
 
-export async function registerUser(formData: FormData) {
-  const cookieStore = await cookies();
+export type RegisterState = { success: boolean; message: string };
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {}
-        },
-      },
-    }
-  );
-
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-
-  // 1. Création du compte d'authentification
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-
-  if (authError || !authData.user) {
-    throw new Error(authError?.message || "Erreur lors de l'inscription.");
+export async function registerUser(
+  _prevState: RegisterState,
+  formData: FormData
+  ): Promise<RegisterState> {
+  const email = String(formData.get('email') ?? '').trim();
+  const password = String(formData.get('password') ?? '');
+  if (!email) {
+  return { success: false, message: 'Veuillez saisir votre adresse e-mail.' };
+  }
+  if (password.length < 8) {
+    return { success: false, message: 'Le mot de passe doit contenir au moins 8 caractères.' };
   }
 
-  // 2. Insertion minimale dans la table 'profiles' (optionnel si géré par un Trigger Supabase)
-  await supabase.from('profiles').insert({
-    id: authData.user.id,
-    email: email,
-    role: 'client',
-  });
+  const supabase = await createClient();
 
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  if (error || !data.user) {
+    return { success: false, message: error?.message ?? "Erreur lors de l'inscription." };
+  }
+
+  if (!data.session) {
+    return {
+      success: true,
+      message: 'Vérifiez votre boîte mail pour confirmer votre compte.',
+    };
+  }
+
+  // Le profil est créé par le trigger handle_new_user
   redirect('/dashboard');
 }

@@ -20,16 +20,21 @@ interface Product {
 interface ProductCatalogClientProps {
   initialProducts: Product[];
   initialFamily?: string;
+  favoriIds?: string[];
 }
 
-export default function ProductCatalogClient({ 
-  initialProducts, 
-  initialFamily = 'tous' 
+export default function ProductCatalogClient({
+  initialProducts,
+  initialFamily = 'tous',
+  favoriIds = [],
 }: ProductCatalogClientProps) {
   const searchParams = useSearchParams();
-  const familyParam = searchParams.get('family'); 
+  const familyParam = searchParams.get('family');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFamily, setSelectedFamily] = useState(initialFamily);
+
+  // Ensemble des produits favoris, recalculé seulement si la liste change
+  const favoris = useMemo(() => new Set(favoriIds), [favoriIds]);
 
   useEffect(() => {
     if (familyParam) {
@@ -48,8 +53,8 @@ export default function ProductCatalogClient({
       const productFamily = (product.family || '').toLowerCase().trim();
       const currentSelected = selectedFamily.toLowerCase().trim();
 
-      const matchesFamily = 
-        currentSelected === 'tous' || 
+      const matchesFamily =
+        currentSelected === 'tous' ||
         productFamily === currentSelected ||
         productFamily.includes(currentSelected);
 
@@ -87,9 +92,9 @@ export default function ProductCatalogClient({
         </div>
 
         <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <CategoryFilter 
-            activeFamily={selectedFamily} 
-            onSelectFamily={(family) => setSelectedFamily(family)} 
+          <CategoryFilter
+            activeFamily={selectedFamily}
+            onSelectFamily={(family) => setSelectedFamily(family)}
           />
         </div>
       </div>
@@ -97,7 +102,9 @@ export default function ProductCatalogClient({
       {/* Grille de produits */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-16 bg-background border border-border/80 rounded-2xl p-6 flex flex-col items-center gap-3">
-          <p className="text-sm font-medium text-foreground">Aucun produit ne correspond à vos critères dans cette catégorie.</p>
+          <p className="text-sm font-medium text-foreground">
+            Aucun produit ne correspond à vos critères dans cette catégorie.
+          </p>
           <button
             onClick={handleReset}
             className="px-4 py-2 bg-shop-orange text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
@@ -108,7 +115,11 @@ export default function ProductCatalogClient({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product as any} />
+            <ProductCard
+              key={product.id}
+              product={product as any}
+              initialIsFavorite={favoris.has(product.id)}
+            />
           ))}
         </div>
       )}

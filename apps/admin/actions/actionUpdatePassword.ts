@@ -1,47 +1,21 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@repo/database/server';
 
 export async function updatePasswordAction(formData: FormData) {
-  const newPassword = formData.get('newPassword') as string;
+  const newPassword = String(formData.get('newPassword') ?? '');
 
-  if (!newPassword || newPassword.length < 6) {
-    return { error: 'Le mot de passe doit contenir au moins 6 caractères.' };
+  if (newPassword.length < 8) {
+    return { error: 'Le mot de passe doit contenir au moins 8 caractères.' };
   }
 
-  const cookieStore = await cookies();
+  const supabase = await createClient();
 
-  // implementation des cookies
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            
-          }
-        },
-      },
-    }
-  );
-
-  // nouveau mot de passe 
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword,
-  });
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
 
   if (error) {
-    return { error: "Mise a jour mot de passe impossible : " + error.message };
+    return { error: `Mise à jour du mot de passe impossible : ${error.message}` };
   }
 
   revalidatePath('/', 'layout');

@@ -29,7 +29,7 @@ export default async function SignaturePage() {
   const supabase = await createUserClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const bulkActionHref = user ? '/dashboard' : '/login';
+  const bulkActionHref = user ? '/dashboard' : '/';
   const { stats, benefits, proTips, recipes, product } = LAURIER_SIGNATURE_DATA;
 
   return (

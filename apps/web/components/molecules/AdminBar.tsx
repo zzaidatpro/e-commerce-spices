@@ -8,6 +8,8 @@ import { cn } from '@repo/ui';
 import ThemeToggle from '../atoms/ThemeToggle';
 import { createUserClient } from '@repo/database/client';
 import { useRouter } from 'next/navigation';
+import { logoutAction } from '@/actions/actionLogOut';
+import { useTransition } from 'react';
 
 interface AdminBarProps {
   className?: string;
@@ -84,9 +86,14 @@ export const AdminBar = ({ className }: AdminBarProps) => {
     });
 
     if (error) {
-      setLoginError("Identifiants incorrects.");
-      setIsLoginSubmitting(false);
-    } else {
+       const messages: Record<string, string> = {
+      'Invalid login credentials': 'Email ou mot de passe incorrect.',
+      'Email not confirmed': "Votre adresse e-mail n'est pas encore confirmée.",
+      'Failed to fetch': "Impossible de joindre le serveur. Vérifiez votre connexion et la configuration.",
+        };
+        setLoginError(messages[error.message] ?? `Connexion impossible : ${error.message}`);
+        setIsLoginSubmitting(false);
+      }else {
       setActiveForm(null);
       setLoginEmail('');
       setLoginPassword('');
@@ -124,12 +131,12 @@ export const AdminBar = ({ className }: AdminBarProps) => {
       }, 1500);
     }
   };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/');
-    router.refresh();
+  const [isLoggingOut, startLogout] = useTransition();
+  const handleLogout = () => {
+  startLogout(async () => {
+    await logoutAction();
+    window.location.replace('/');
+  });
   };
 
   return (
@@ -157,13 +164,15 @@ export const AdminBar = ({ className }: AdminBarProps) => {
                 </Link>
 
                 {/* Déconnexion */}
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-foreground hover:bg-secondary rounded-md transition-colors cursor-pointer border border-transparent hover:border-border/40 flex items-center justify-center"
-                  title="Déconnexion"
-                >
-                  <LogOut className="w-4 h-4 text-muted-foreground" />
-                </button>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="p-2 text-foreground hover:bg-secondary rounded-md transition-colors cursor-pointer border border-transparent hover:border-border/40 flex items-center justify-center disabled:opacity-50"
+                    title="Déconnexion"
+                    aria-label="Déconnexion"
+                  >
+                    <LogOut className={`w-4 h-4 text-muted-foreground ${isLoggingOut ? 'animate-pulse' : ''}`} />
+                  </button>
               </div>
             ) : (
               <div className="flex items-center gap-1.5">

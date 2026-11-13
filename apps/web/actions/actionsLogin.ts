@@ -1,40 +1,20 @@
 'use server';
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { createClient } from '@repo/database/server';
 
-export async function loginAction(prevState: any, formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+export type LoginState = { success: boolean; message: string };
 
-  const cookieStore = await cookies();
+export async function loginAction(
+  _prevState: LoginState,
+  formData: FormData
+): Promise<LoginState> {
+  const email = String(formData.get('email') ?? '').trim();
+  const password = String(formData.get('password') ?? '');
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignoré si appelé dans un Server Component pur
-          }
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { success: false, message: 'Email ou mot de passe incorrect.' };
