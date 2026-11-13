@@ -14,8 +14,8 @@ interface ProductPageProps {
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const supabase = createServerClient(
-    process.env.NEXT_SUPABASE_URL!,
-    process.env.NEXT_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

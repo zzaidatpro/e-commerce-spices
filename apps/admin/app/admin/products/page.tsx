@@ -9,14 +9,18 @@ export const revalidate = 0; // Pour s'assurer que les données affichées sont 
 export default async function ProductsManagementPage() {
   const cookieStore = await cookies();
 
-  const supabase = createServerClient(process.env.NEXT_SUPABASE_URL!, process.env.NEXT_SUPABASE_ANON_KEY!, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {},
       },
-      setAll() {},
     },
-  });
+  );
 
   const { data: products, error } = await supabase
     .from("produits")

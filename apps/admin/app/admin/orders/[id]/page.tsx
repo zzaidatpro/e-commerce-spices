@@ -12,14 +12,18 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   const { id } = await params;
   const cookieStore = await cookies();
 
-  const supabase = createServerClient(process.env.NEXT_SUPABASE_URL!, process.env.NEXT_SUPABASE_ANON_KEY!, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {},
       },
-      setAll() {},
     },
-  });
+  );
 
   // 1. Récupérer les détails de la commande avec le profil client associé
   const { data: order, error: orderError } = await supabase

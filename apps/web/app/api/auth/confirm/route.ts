@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
   if (token_hash && type) {
     // Création d'un client SSR pour gérer les cookies de session sur le serveur
     const supabase = createServerClient(
-      process.env.NEXT_SUPABASE_URL!,
-      process.env.NEXT_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {

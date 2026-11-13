@@ -10,14 +10,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let userRole = "manager"; // Par défaut ou valeur de repli
 
   if (sessionToken) {
-    const supabase = createServerClient(process.env.NEXT_SUPABASE_URL!, process.env.NEXT_SUPABASE_ANON_KEY!, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll() {},
         },
-        setAll() {},
       },
-    });
+    );
 
     // Récupérer l'utilisateur courant et son rôle
     const {
