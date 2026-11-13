@@ -1,31 +1,27 @@
-import React from 'react';
-import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import { Plus, Package, Edit, Trash2 } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { Plus, Package, Edit, Trash2 } from "lucide-react";
 
 export const revalidate = 0; // Pour s'assurer que les données affichées sont toujours fraîches
 
 export default async function ProductsManagementPage() {
   const cookieStore = await cookies();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {},
+  const supabase = createServerClient(process.env.NEXT_SUPABASE_URL!, process.env.NEXT_SUPABASE_ANON_KEY!, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+      setAll() {},
+    },
+  });
 
   const { data: products, error } = await supabase
-    .from('produits')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from("produits")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
     return (
@@ -41,9 +37,7 @@ export default async function ProductsManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Gestion du Catalogue</h1>
-          <p className="text-xs text-muted-foreground">
-            Gérez la liste de vos épices, sauces et stocks.
-          </p>
+          <p className="text-xs text-muted-foreground">Gérez la liste de vos épices, sauces et stocks.</p>
         </div>
         <Link
           href="/admin/products/new"
@@ -87,21 +81,19 @@ export default async function ProductsManagementPage() {
                       <div className="text-[10px] text-muted-foreground">ID: {product.id}</div>
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground">{product.family || 'Non catégorisé'}</td>
-                  <td className="p-4 font-semibold text-foreground">
-                    {Number(product.prix_unitaire).toFixed(2)} Da
-                  </td>
+                  <td className="p-4 text-muted-foreground">{product.family || "Non catégorisé"}</td>
+                  <td className="p-4 font-semibold text-foreground">{Number(product.prix_unitaire).toFixed(2)} Da</td>
                   <td className="p-4">
                     <span
                       className={`px-2 py-1 rounded-full text-[10px] font-bold ${
                         product.stock > 10
-                          ? 'bg-green-500/10 text-green-600'
+                          ? "bg-green-500/10 text-green-600"
                           : product.stock > 0
-                          ? 'bg-amber-500/10 text-amber-600'
-                          : 'bg-red-500/10 text-red-600'
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-red-500/10 text-red-600"
                       }`}
                     >
-                      {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
+                      {product.stock > 0 ? `${product.stock} en stock` : "Rupture"}
                     </span>
                   </td>
                   <td className="p-4 text-right">

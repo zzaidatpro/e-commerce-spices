@@ -1,9 +1,9 @@
-import React from 'react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { createServerClient } from '@supabase/ssr';
-import { ProductCard } from '@/components/molecules/product-card'; 
+import React from "react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { createServerClient } from "@supabase/ssr";
+import { ProductCard } from "@/components/molecules/product-card";
 
 interface ProductPageProps {
   params: Promise<{
@@ -14,20 +14,22 @@ interface ProductPageProps {
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_SUPABASE_URL!,
+    process.env.NEXT_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return []; },
+        getAll() {
+          return [];
+        },
         setAll() {},
       },
-    }
+    },
   );
- 
+
   const { data: product, error } = await supabase
-    .from('produits')
-    .select('*')
-    .eq('slug', slug)
+    .from("produits")
+    .select("*")
+    .eq("slug", slug)
     .maybeSingle();
 
   if (error || !product) {

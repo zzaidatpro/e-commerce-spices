@@ -1,8 +1,8 @@
-import React from 'react';
-import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import { ArrowLeft, Package, User, MapPin, Calendar, CreditCard } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { ArrowLeft, Package, User, MapPin, Calendar, CreditCard } from "lucide-react";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -12,35 +12,37 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   const { id } = await params;
   const cookieStore = await cookies();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll() {},
+  const supabase = createServerClient(process.env.NEXT_SUPABASE_URL!, process.env.NEXT_SUPABASE_ANON_KEY!, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+      setAll() {},
+    },
+  });
 
   // 1. Récupérer les détails de la commande avec le profil client associé
   const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select(`
+    .from("orders")
+    .select(
+      `
       *,
       profiles:user_id (name, email)
-    `)
-    .eq('id', id)
+    `,
+    )
+    .eq("id", id)
     .single();
 
   // 2. Récupérer les articles associés à cette commande (table de liaison order_items + produits)
   const { data: items, error: itemsError } = await supabase
-    .from('order_items')
-    .select(`
+    .from("order_items")
+    .select(
+      `
       *,
       products:product_id (name, image_url, price)
-    `)
-    .eq('order_id', id);
+    `,
+    )
+    .eq("order_id", id);
 
   if (orderError || !order) {
     return (
@@ -64,9 +66,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <ArrowLeft className="w-4 h-4" />
           <span>Retour aux commandes</span>
         </Link>
-        <span className="font-mono text-xs font-bold px-3 py-1 bg-muted rounded-full">
-          ID: #{order.id}
-        </span>
+        <span className="font-mono text-xs font-bold px-3 py-1 bg-muted rounded-full">ID: #{order.id}</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -86,7 +86,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       {item.products?.image_url ? (
                         <img
                           src={item.products.image_url}
-                          alt={item.products?.name || 'Produit'}
+                          alt={item.products?.name || "Produit"}
                           className="w-12 h-12 object-cover rounded-lg border border-border"
                         />
                       ) : (
@@ -96,7 +96,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       )}
                       <div>
                         <div className="text-xs font-semibold text-foreground">
-                          {item.products?.name || 'Produit personnalisé / supprimé'}
+                          {item.products?.name || "Produit personnalisé / supprimé"}
                         </div>
                         <div className="text-[10px] text-muted-foreground">
                           Quantité : {item.quantity} × {Number(item.price_at_purchase || 0).toFixed(2)} €
@@ -109,7 +109,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-muted-foreground py-4 text-center">Aucun article trouvé pour cette commande.</p>
+                <p className="text-xs text-muted-foreground py-4 text-center">
+                  Aucun article trouvé pour cette commande.
+                </p>
               )}
             </div>
 
@@ -130,8 +132,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               Client
             </h3>
             <div className="text-xs flex flex-col gap-1 text-muted-foreground">
-              <span className="font-semibold text-foreground">{order.profiles?.name || 'Client e-commerce'}</span>
-              <span>{order.profiles?.email || order.shipping_email || 'Non renseigné'}</span>
+              <span className="font-semibold text-foreground">{order.profiles?.name || "Client e-commerce"}</span>
+              <span>{order.profiles?.email || order.shipping_email || "Non renseigné"}</span>
             </div>
           </div>
 
@@ -142,8 +144,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               Adresse de livraison
             </h3>
             <div className="text-xs text-muted-foreground">
-              <p>{order.shipping_address || 'Adresse non spécifiée'}</p>
-              <p>{order.shipping_city} {order.shipping_postal_code}</p>
+              <p>{order.shipping_address || "Adresse non spécifiée"}</p>
+              <p>
+                {order.shipping_city} {order.shipping_postal_code}
+              </p>
             </div>
           </div>
 
@@ -151,11 +155,13 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-shop-orange" />
-              <span>{new Date(order.created_at).toLocaleDateString('fr-FR', { dateStyle: 'long' })}</span>
+              <span>{new Date(order.created_at).toLocaleDateString("fr-FR", { dateStyle: "long" })}</span>
             </div>
             <div className="flex items-center gap-2">
               <CreditCard className="w-4 h-4 text-shop-orange" />
-              <span className="capitalize">Statut : <strong className="text-foreground">{order.status}</strong></span>
+              <span className="capitalize">
+                Statut : <strong className="text-foreground">{order.status}</strong>
+              </span>
             </div>
           </div>
         </div>

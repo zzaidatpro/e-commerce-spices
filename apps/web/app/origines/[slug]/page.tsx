@@ -1,11 +1,10 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { notFound } from 'next/navigation';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getRegionsWithSpices } from '@repo/database';
-import { slugify } from '@repo/ui';
-
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { getRegionsWithSpices } from "@repo/database";
+import { slugify } from "@repo/ui";
 
 interface PageProps {
   params: Promise<{
@@ -18,23 +17,23 @@ export default async function RegionDetailPage({ params }: PageProps) {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+    process.env.NEXT_SUPABASE_URL!,
+    process.env.NEXT_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } },
   );
 
   const allProducts = await getRegionsWithSpices(supabase as any);
 
   // Filtrage flexible : comparaison du slug
   const regionProducts = (allProducts || []).filter(
-    (product: any) => slugify(product.origin || '') === slug
+    (product: any) => slugify(product.origin || "") === slug,
   );
 
   if (!regionProducts || regionProducts.length === 0) {
     notFound();
   }
 
-  const regionName = regionProducts[0]?.origin || 'Terroir';
+  const regionName = regionProducts[0]?.origin || "Terroir";
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-8">
@@ -45,17 +44,16 @@ export default async function RegionDetailPage({ params }: PageProps) {
         >
           ← les origines
         </Link>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-          Terroir : {regionName}
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Terroir : {regionName}</h1>
         <p className="text-muted-foreground text-sm max-w-2xl">
-          Découvrez notre sélection exclusive d'épices d'exception provenant de la région {regionName}.
+          Découvrez notre sélection exclusive d'épices d'exception provenant de la région{" "}
+          {regionName}.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {regionProducts.map((product: any) => {
-          const imageUrl = product.image_url || product.image || '/images/placeholder.jpg';
+          const imageUrl = product.image_url || product.image || "/images/placeholder.jpg";
 
           return (
             <Link
@@ -66,7 +64,7 @@ export default async function RegionDetailPage({ params }: PageProps) {
               <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-muted mb-3">
                 <Image
                   src={imageUrl}
-                  alt={product.nom || 'Produit'}
+                  alt={product.nom || "Produit"}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
@@ -88,7 +86,7 @@ export default async function RegionDetailPage({ params }: PageProps) {
 
                 <div className="pt-2 flex items-center justify-between border-t border-border/40">
                   <span className="font-bold text-shop-orange text-sm">
-                    {product.prix ? `${product.prix} €` : ''}
+                    {product.prix ? `${product.prix} €` : ""}
                   </span>
                   <span className="text-xs font-medium text-foreground group-hover:translate-x-1 transition-transform">
                     Voir →

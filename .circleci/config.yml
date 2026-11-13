@@ -49,16 +49,16 @@ jobs:
           name: Build Web App
           command: pnpm --filter web build
           environment:
-            NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+            NEXT_SUPABASE_URL: $NEXT_SUPABASE_URL
+            NEXT_SUPABASE_ANON_KEY: $NEXT_SUPABASE_ANON_KEY
 
       # Exécution des tests E2E Playwright sur apps/web
       - run:
           name: Run Playwright E2E Tests
           command: pnpm --filter web test:e2e
           environment:
-            NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+            NEXT_SUPABASE_URL: $NEXT_SUPABASE_URL
+            NEXT_SUPABASE_ANON_KEY: $NEXT_SUPABASE_ANON_KEY
 
       # Sauvegarde des rapports Playwright en cas d'échec
       - store_artifacts:

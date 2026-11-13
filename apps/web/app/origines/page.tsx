@@ -1,24 +1,23 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getRegionsWithSpices } from '@repo/database';
-import { slugify } from '@repo/ui';
-
+import Link from "next/link";
+import Image from "next/image";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { getRegionsWithSpices } from "@repo/database";
+import { slugify } from "@repo/ui";
 
 export default async function OriginesPage() {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+    process.env.NEXT_SUPABASE_URL!,
+    process.env.NEXT_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } },
   );
 
   const products = await getRegionsWithSpices(supabase as any);
   const regionsMap = (products || []).reduce((acc: Record<string, any>, product: any) => {
     if (!product.origin) return acc;
-    
+
     const originName = product.origin;
     const originSlug = slugify(originName);
 
@@ -26,7 +25,7 @@ export default async function OriginesPage() {
       acc[originSlug] = {
         name: originName,
         slug: originSlug,
-        image_url: product.image_url || product.image || '/images/placeholder.jpg',
+        image_url: product.image_url || product.image || "/images/placeholder.jpg",
         count: 0,
       };
     }
@@ -68,7 +67,7 @@ export default async function OriginesPage() {
                   {region.name}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {region.count} {region.count > 1 ? 'produits référencés' : 'produit référencé'}
+                  {region.count} {region.count > 1 ? "produits référencés" : "produit référencé"}
                 </p>
               </div>
 
