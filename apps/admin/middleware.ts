@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
     routeRules: [
       { prefix: '/admin/settings', roles: ['admin'] },
       { prefix: '/admin/users', roles: ['admin'] },
-      { prefix: '/admin/products', roles: ['admin'] },
+      { prefix: '/admin/settings', roles: ['admin'] },
 
     ],
     loginPath: '/login',

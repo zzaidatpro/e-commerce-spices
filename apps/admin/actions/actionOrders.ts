@@ -2,65 +2,47 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireRole } from './helper';
-import { STAFF_ROLES, STATUTS_COMMANDE, TRANSITIONS, type StatutCommande } from '@/lib/permissions';
+import { STATUTS_STAFF, type StatutStaff } from '@/lib/commandes';
 
-export async function updateOrderStatus(orderId: string, newStatus: string) {
-  const auth = await requireRole(STAFF_ROLES).catch(() => null);
+export async function changerStatutAction(orderId: string, statut: string) {
+  const auth = await requireRole(['admin', 'manager']).catch(() => null);
   if (!auth) return { error: 'Accès refusé.' };
 
-  if (!STATUTS_COMMANDE.includes(newStatus as StatutCommande)) return { error: 'Statut invalide.' };
-
-  const { data: order, error: readError } = await auth.supabase
-    .from('orders')
-    .select('status')
-    .eq('id', orderId)
-    .single();
-  if (readError || !order) return { error: 'Commande introuvable.' };
-
-  const current = order.status as StatutCommande;
-  const allowed = TRANSITIONS[current] ?? [];
-  if (auth.role !== 'admin' && !allowed.includes(newStatus as StatutCommande)) {
-    return { error: `Passage de « ${current} » à « ${newStatus} » non autorisé.` };
+  if (!STATUTS_STAFF.includes(statut as StatutStaff)) {
+    return { error: 'Statut non autorisé. La livraison est confirmée par le client.' };
   }
 
-  const { error } = await auth.supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+  const { error } = await auth.supabase.from('orders').update({ statut }).eq('id', orderId);
   if (error) return { error: error.message };
 
   revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
   return { success: true };
 }
 
-export async function updateOrderDetails(orderId: string, formData: FormData) {
+export async function appliquerRemiseAction(orderId: string, formData: FormData) {
   const auth = await requireRole(['admin']).catch(() => null);
   if (!auth) return { error: 'Accès refusé.' };
 
-  const type_lieu = String(formData.get('type_lieu') ?? '');
-  if (!['maison', 'magasin', 'depot'].includes(type_lieu)) return { error: 'Type de lieu invalide.' };
+  const remise = Number(formData.get('remise'));
+  if (!Number.isFinite(remise) || remise < 0) return { error: 'Remise invalide.' };
 
-  const { error } = await auth.supabase
-    .from('orders')
-    .update({
-      type_lieu,
-      adresse_complete: String(formData.get('adresse_complete') ?? '').trim(),
-      url_google_maps: String(formData.get('url_google_maps') ?? '').trim() || null,
-    })
-    .eq('id', orderId);
+  const { error } = await auth.supabase.from('orders').update({ remise }).eq('id', orderId);
   if (error) return { error: error.message };
 
   revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
   return { success: true };
 }
 
-// Suppression : admin uniquement
-export async function deleteOrderAction(orderId: string) {
-  const auth = await requireRole(['admin']).catch(() => null);
+export type ResultatAction<T extends object = {}> = ({ success: true } & T) | { error: string };
+
+export async function genererCodeAction(orderId: string) {
+  const auth = await requireRole(['admin', 'manager']).catch(() => null);
   if (!auth) return { error: 'Accès refusé.' };
 
-  await auth.supabase.from('order_items').delete().eq('order_id', orderId);
-
-  const { error } = await auth.supabase.from('orders').delete().eq('id', orderId);
+  const { data, error } = await auth.supabase.rpc('generer_code_livraison', { p_order: orderId });
   if (error) return { error: error.message };
 
-  revalidatePath('/admin/orders');
-  return { success: true };
+  return { success: true, code: String(data) };
 }

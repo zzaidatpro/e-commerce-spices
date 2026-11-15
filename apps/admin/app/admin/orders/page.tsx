@@ -1,130 +1,115 @@
-import React from "react";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import { ShoppingBag, Clock, CheckCircle2, Truck, XCircle } from "lucide-react";
-import UpdateOrderStatusForm from "@/components/molecules/UpdateOrderStatusForm"; // Composant client pour modifier le statut
+import Link from 'next/link';
+import { requireRole } from '@/actions/helper';
+import { STATUT_LABELS } from '@/lib/commandes';
 
-export const revalidate = 0;
+type ClientOption = { id: string; nom: string | null; prenom: string | null; email: string | null };
 
-export default async function OrdersManagementPage() {
-  const cookieStore = await cookies();
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>;
+}) {
+  const { client } = await searchParams;
+  const auth = await requireRole(['admin', 'manager']);
+  const supabase = auth.supabase;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {},
-      },
-    },
+  // Liste des clients : sert au filtre et aux noms affichés
+  const { data: clientsData } = await supabase.rpc('liste_clients');
+  const clients: ClientOption[] = clientsData ?? [];
+  const nomDe = new Map(
+    clients.map((c) => [c.id, `${c.prenom ?? ''} ${c.nom ?? ''}`.trim() || c.email || 'Client'])
   );
 
-  // Récupérer les commandes avec les informations de profil associées si disponibles
-  const { data: orders, error } = await supabase
-    .from("orders")
-    .select(
-      `
-      *,
-      profiles:user_id (email, name)
-    `,
-    )
-    .order("created_at", { ascending: false });
+  let query = supabase
+    .from('orders')
+    .select('id, created_at, total, remise, statut, client_id')
+    .order('created_at', { ascending: false });
+
+  if (client) query = query.eq('client_id', client);
+
+  const { data: orders, error } = await query;
 
   if (error) {
-    return (
-      <div className="p-4 bg-destructive/10 text-destructive rounded-xl text-xs">
-        Erreur lors du chargement des commandes : {error.message}
-      </div>
-    );
+    return <p className="text-xs text-destructive">Erreur de chargement : {error.message}</p>;
   }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 text-green-600 rounded-full text-[10px] font-bold">
-            <CheckCircle2 className="w-3 h-3" /> Livrée
-          </span>
-        );
-      case "shipped":
-        return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 text-blue-600 rounded-full text-[10px] font-bold">
-            <Truck className="w-3 h-3" /> Expédiée
-          </span>
-        );
-      case "cancelled":
-        return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-red-500/10 text-red-600 rounded-full text-[10px] font-bold">
-            <XCircle className="w-3 h-3" /> Annulée
-          </span>
-        );
-      default:
-        return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-bold">
-            <Clock className="w-3 h-3" /> En attente
-          </span>
-        );
-    }
-  };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Gestion des Commandes</h1>
-        <p className="text-xs text-muted-foreground">
-          Suivez et mettez à jour le statut des commandes clients en temps réel.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Commandes</h1>
+          <p className="text-xs text-muted-foreground">{orders?.length ?? 0} commande(s)</p>
+        </div>
+
+        <form method="GET" className="flex items-center gap-2">
+          <select
+            name="client"
+            defaultValue={client ?? ''}
+            className="px-3 py-2 border border-border rounded-xl bg-background text-xs"
+          >
+            <option value="">Tous les clients</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {nomDe.get(c.id)}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="px-3 py-2 bg-shop-orange text-white text-xs font-bold rounded-xl">
+            Filtrer
+          </button>
+          {client && (
+            <Link href="/admin/orders" className="text-xs text-muted-foreground hover:underline">
+              Réinitialiser
+            </Link>
+          )}
+        </form>
       </div>
 
-      {/* Tableau des commandes */}
       <div className="border border-border rounded-2xl bg-card overflow-hidden">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-              <th className="p-4">ID Commande</th>
+              <th className="p-4">Commande</th>
               <th className="p-4">Client</th>
+              <th className="p-4">Date</th>
               <th className="p-4">Total</th>
               <th className="p-4">Statut</th>
-              <th className="p-4">Date</th>
-              <th className="p-4 text-right">Actions / Statut</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {orders && orders.length > 0 ? (
-              orders.map((order) => (
-                <tr key={order.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-4 font-mono font-semibold text-foreground">#{order.id.slice(0, 8)}</td>
+              orders.map((o) => (
+                <tr key={o.id} className="hover:bg-muted/30">
                   <td className="p-4">
-                    <div className="font-semibold text-foreground">{order.profiles?.name || "Client e-commerce"}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {order.profiles?.email || order.shipping_email || "Email non renseigné"}
-                    </div>
+                    <Link href={`/admin/orders/${o.id}`} className="font-mono font-semibold text-shop-orange hover:underline">
+                      #{o.id.slice(0, 8)}
+                    </Link>
                   </td>
-                  <td className="p-4 font-semibold text-foreground">{Number(order.total_amount || 0).toFixed(2)} €</td>
-                  <td className="p-4">{getStatusBadge(order.status)}</td>
+                  <td className="p-4">{nomDe.get(o.client_id) ?? 'Client inconnu'}</td>
                   <td className="p-4 text-muted-foreground">
-                    {new Date(order.created_at).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
+                    {new Date(o.created_at).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </td>
-                  <td className="p-4 text-right">
-                    {/* Formulaire interactif pour modifier le statut */}
-                    <UpdateOrderStatusForm orderId={order.id} currentStatus={order.status} />
+                  <td className="p-4 font-semibold">
+                    {Number(o.total).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA
+                    {Number(o.remise) > 0 && (
+                      <span className="block text-[10px] text-green-600">
+                        remise {Number(o.remise).toLocaleString('fr-FR')} DA
+                      </span>
+                    )}
                   </td>
+                  <td className="p-4">{STATUT_LABELS[o.statut] ?? o.statut}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                  Aucune commande enregistrée pour le moment.
+                <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                  Aucune commande.
                 </td>
               </tr>
             )}

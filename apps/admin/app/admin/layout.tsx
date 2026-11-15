@@ -1,58 +1,47 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { redirect } from "next/navigation";
+import { createClient } from "@repo/database/server";
 import Sidebar from "@/components/molecules/Sidebar";
 import LogoutButton from "@/components/atoms/LogoutButton";
+import NotificationCenter from "@/components/molecules/NotificationCenter";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("admin_session")?.value;
+  const supabase = await createClient();
 
-  let userRole = "manager"; // Par défaut ou valeur de repli
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  if (sessionToken) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll() {},
-        },
-      },
-    );
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.id)
+    .single();
 
-    // Récupérer l'utilisateur courant et son rôle
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-
-      if (profile?.role) {
-        userRole = profile.role; // 'admin' ou 'manager'
-      }
-    }
+  if (!profile || profile.status !== "approved" || (profile.role !== "admin" && profile.role !== "manager")) {
+    redirect("/unauthorized");
   }
+
+  const role = profile.role as "admin" | "manager";
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar latérale avec transmission du rôle */}
       <aside className="w-64 border-r border-border p-4 flex flex-col justify-between">
         <div>
           <h2 className="text-sm font-bold text-foreground mb-6 px-3">
-            {userRole === "admin" ? "Espace Administrateur" : "Espace Manager"}
+            {role === "admin" ? "Espace Administrateur" : "Espace Manager"}
           </h2>
-          <Sidebar role={userRole} />
+          <Sidebar role={role} />
         </div>
         <div className="pt-4 border-t border-border">
           <LogoutButton />
         </div>
       </aside>
 
-      {/* Contenu principal */}
-      <main className="flex-1 p-8 bg-background overflow-y-auto">{children}</main>
+      <main className="flex-1 flex flex-col bg-background overflow-y-auto">
+        <header className="flex justify-end items-center gap-2 p-4 border-b border-border">
+          <NotificationCenter role={role} />
+        </header>
+        <div className="p-8">{children}</div>
+      </main>
     </div>
   );
 }

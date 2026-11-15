@@ -1,173 +1,185 @@
-import React from "react";
-import Link from "next/link";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import { ArrowLeft, Package, User, MapPin, Calendar, CreditCard } from "lucide-react";
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { requireRole } from '@/actions/helper';
+import { STATUT_LABELS } from '@/lib/commandes';
+import {
+  OrderStatusForm,
+  RemiseForm,
+  CodeLivraisonButton,
+} from '@/components/molecules/OrderActions';
 
-interface OrderDetailPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cookieStore = await cookies();
+  const auth = await requireRole(['admin', 'manager']);
+  const supabase = auth.supabase;
+  const isAdmin = auth.role === 'admin';
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {},
-      },
-    },
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('id, created_at, total, remise, statut, adresse_liv_id, expediee_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) return <p className="text-xs text-destructive">Erreur : {error.message}</p>;
+  if (!order) notFound();
+
+  const [itemsRes, adresseRes, contactRes] = await Promise.all([
+    supabase
+      .from('order_items')
+      .select('id, quantite, prix_facture, produits(nom)')
+      .eq('order_id', id),
+    order.adresse_liv_id
+      ? supabase
+          .from('adresses_livraison')
+          .select('adresse_complete, type_lieu, url_google_maps')
+          .eq('id', order.adresse_liv_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase.rpc('contact_client_commande', { p_order: id }),
+  ]);
+
+  const items = itemsRes.data ?? [];
+  const adresse = adresseRes.data;
+  const contact = contactRes.data?.[0];
+  const waDigits = contact?.whatsapp?.replace(/\D/g, '');
+
+  const sousTotal = items.reduce(
+    (s: number, i: { quantite: number; prix_facture: number }) =>
+      s + Number(i.quantite) * Number(i.prix_facture),
+    0
   );
 
-  // 1. Récupérer les détails de la commande avec le profil client associé
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select(
-      `
-      *,
-      profiles:user_id (name, email)
-    `,
-    )
-    .eq("id", id)
-    .single();
-
-  // 2. Récupérer les articles associés à cette commande (table de liaison order_items + produits)
-  const { data: items, error: itemsError } = await supabase
-    .from("order_items")
-    .select(
-      `
-      *,
-      products:product_id (name, image_url, price)
-    `,
-    )
-    .eq("order_id", id);
-
-  if (orderError || !order) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-xs text-destructive font-medium mb-4">Commande introuvable ou erreur de chargement.</p>
-        <Link href="/admin/orders" className="text-xs text-shop-orange hover:underline">
-          &larr; Retour à la liste des commandes
-        </Link>
-      </div>
-    );
-  }
+  const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
+  const peutGenererCode = order.statut === 'payée' || order.statut === 'expédiée';
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-      {/* Bouton de retour et titre */}
+    <div className="flex flex-col gap-6 max-w-5xl">
       <div className="flex items-center justify-between">
-        <Link
-          href="/admin/orders"
-          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Retour aux commandes</span>
-        </Link>
-        <span className="font-mono text-xs font-bold px-3 py-1 bg-muted rounded-full">ID: #{order.id}</span>
+        <div>
+          <Link href="/admin/orders" className="text-xs text-muted-foreground hover:underline">
+            ← Retour aux commandes
+          </Link>
+          <h1 className="text-xl font-bold text-foreground mt-1">Commande #{order.id.slice(0, 8)}</h1>
+          <p className="text-xs text-muted-foreground">
+            Passée le{' '}
+            {new Date(order.created_at).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+            {order.expediee_at &&
+              ` · expédiée le ${new Date(order.expediee_at).toLocaleDateString('fr-FR')}`}
+          </p>
+        </div>
+        <OrderStatusForm orderId={order.id} statut={order.statut} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Colonne principale : Articles achetés */}
-        <div className="md:col-span-2 flex flex-col gap-6">
-          <div className="border border-border rounded-2xl bg-card p-6">
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <Package className="w-4 h-4 text-shop-orange" />
-              Articles de la commande
-            </h2>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Colonne principale : articles et totaux */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <section className="border border-border rounded-2xl bg-card p-6">
+            <h2 className="text-sm font-bold text-foreground mb-4">Articles</h2>
             <div className="divide-y divide-border">
-              {items && items.length > 0 ? (
-                items.map((item) => (
-                  <div key={item.id} className="py-3 flex items-center justify-between first:pt-0 last:pb-0">
-                    <div className="flex items-center gap-3">
-                      {item.products?.image_url ? (
-                        <img
-                          src={item.products.image_url}
-                          alt={item.products?.name || "Produit"}
-                          className="w-12 h-12 object-cover rounded-lg border border-border"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
-                          <Package className="w-5 h-5" />
-                        </div>
-                      )}
-                      <div>
-                        <div className="text-xs font-semibold text-foreground">
-                          {item.products?.name || "Produit personnalisé / supprimé"}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground">
-                          Quantité : {item.quantity} × {Number(item.price_at_purchase || 0).toFixed(2)} €
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs font-bold text-foreground">
-                      {(item.quantity * Number(item.price_at_purchase || 0)).toFixed(2)} €
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground py-4 text-center">
-                  Aucun article trouvé pour cette commande.
-                </p>
+              {items.map((item: any) => (
+                <div key={item.id} className="py-3 flex justify-between text-xs">
+                  <span>
+                    {item.produits?.nom ?? 'Produit supprimé'} × {item.quantite}
+                  </span>
+                  <span className="font-semibold">
+                    {euros(Number(item.quantite) * Number(item.prix_facture))}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-border flex flex-col gap-1 text-xs">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Sous-total</span>
+                <span>{euros(sousTotal)}</span>
+              </div>
+              {Number(order.remise) > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Remise</span>
+                  <span>- {euros(Number(order.remise))}</span>
+                </div>
               )}
+              <div className="flex justify-between font-bold text-sm">
+                <span>Total à payer</span>
+                <span className="text-shop-orange">{euros(Number(order.total))}</span>
+              </div>
             </div>
+          </section>
 
-            {/* Total */}
-            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between font-bold text-sm">
-              <span>Total général</span>
-              <span className="text-shop-orange">{Number(order.total_amount || 0).toFixed(2)} €</span>
-            </div>
-          </div>
+          <section className="border border-border rounded-2xl bg-card p-6 text-xs">
+            <h2 className="text-sm font-bold text-foreground mb-3">Livraison</h2>
+            {adresse ? (
+              <>
+                <p className="text-foreground">{adresse.adresse_complete}</p>
+                <p className="text-muted-foreground capitalize">Lieu : {adresse.type_lieu}</p>
+                {adresse.url_google_maps && (
+                  <a
+                    href={adresse.url_google_maps}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-shop-orange hover:underline"
+                  >
+                    Ouvrir dans Google Maps
+                  </a>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground">Adresse non renseignée.</p>
+            )}
+          </section>
         </div>
 
-        {/* Colonne latérale : Infos client et livraison */}
+        {/* Colonne latérale : client, livraison, remise */}
         <div className="flex flex-col gap-6">
-          {/* Informations Client */}
-          <div className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
-              <User className="w-4 h-4 text-shop-orange" />
-              Client
-            </h3>
-            <div className="text-xs flex flex-col gap-1 text-muted-foreground">
-              <span className="font-semibold text-foreground">{order.profiles?.name || "Client e-commerce"}</span>
-              <span>{order.profiles?.email || order.shipping_email || "Non renseigné"}</span>
-            </div>
-          </div>
+          <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-2 text-xs">
+            <h2 className="text-sm font-bold text-foreground">Client</h2>
+            {contactRes.error ? (
+              <p className="text-destructive">Coordonnées indisponibles.</p>
+            ) : contact ? (
+              <>
+                <p className="font-semibold text-foreground">
+                  {contact.prenom} {contact.nom}
+                </p>
+                {contact.email && <p className="text-muted-foreground">{contact.email}</p>}
+                {contact.telephone && (
+                  <a href={`tel:${contact.telephone}`} className="text-shop-orange hover:underline">
+                    {contact.telephone}
+                  </a>
+                )}
+                {waDigits && (
+                  <a
+                    href={`https://wa.me/${waDigits}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-shop-orange hover:underline"
+                  >
+                    WhatsApp
+                  </a>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground">Client introuvable.</p>
+            )}
+          </section>
 
-          {/* Adresse de livraison */}
-          <div className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-shop-orange" />
-              Adresse de livraison
-            </h3>
-            <div className="text-xs text-muted-foreground">
-              <p>{order.shipping_address || "Adresse non spécifiée"}</p>
-              <p>
-                {order.shipping_city} {order.shipping_postal_code}
-              </p>
-            </div>
-          </div>
+          {peutGenererCode && (
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
+              <h2 className="text-sm font-bold text-foreground">Livraison au client</h2>
+              <CodeLivraisonButton orderId={order.id} />
+            </section>
+          )}
 
-          {/* Métadonnées */}
-          <div className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-shop-orange" />
-              <span>{new Date(order.created_at).toLocaleDateString("fr-FR", { dateStyle: "long" })}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-shop-orange" />
-              <span className="capitalize">
-                Statut : <strong className="text-foreground">{order.status}</strong>
-              </span>
-            </div>
-          </div>
+          {isAdmin && (
+            <section className="border border-border rounded-2xl bg-card p-6">
+              <h2 className="text-sm font-bold text-foreground mb-3">Remise</h2>
+              <RemiseForm orderId={order.id} remise={Number(order.remise)} />
+            </section>
+          )}
         </div>
       </div>
     </div>

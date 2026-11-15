@@ -3,29 +3,24 @@
 import { revalidatePath } from 'next/cache';
 import { requireRole } from './helper';
 import { adminClient } from '@/lib/supabase/admin';
-import { ROLES, STATUTS_UTILISATEUR, type Role, type StatutUtilisateur } from '@/lib/permissions';
 
-async function requireAdmin() {
-  return requireRole(['admin']).catch(() => null);
-}
+const ROLES_CREABLES = ['manager', 'livreur'] as const;
+type RoleCreable = (typeof ROLES_CREABLES)[number];
 
-export async function createUserAction(formData: FormData) {
-  const auth = await requireAdmin();
+export async function creerCompteStaffAction(formData: FormData) {
+  const auth = await requireRole(['admin']).catch(() => null);
   if (!auth) return { error: 'Accès refusé.' };
 
-  const email = String(formData.get('email') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
   const nom = String(formData.get('nom') ?? '').trim();
   const prenom = String(formData.get('prenom') ?? '').trim();
   const telephone = String(formData.get('telephone') ?? '').trim();
-  const role = String(formData.get('role') ?? '') as Role;
-  const status = String(formData.get('status') ?? 'approved') as StatutUtilisateur;
+  const role = String(formData.get('role') ?? '') as RoleCreable;
 
-  if (!email || !nom || !prenom || password.length < 8) {
-    return { error: 'Champs invalides (mot de passe : 8 caractères minimum).' };
-  }
-  if (!ROLES.includes(role)) return { error: 'Rôle invalide.' };
-  if (!STATUTS_UTILISATEUR.includes(status)) return { error: 'Statut invalide.' };
+  if (!email || !nom || !prenom) return { error: 'Email, nom et prénom sont obligatoires.' };
+  if (password.length < 8) return { error: 'Le mot de passe doit contenir au moins 8 caractères.' };
+  if (!ROLES_CREABLES.includes(role)) return { error: 'Rôle invalide.' };
 
   const { data, error } = await adminClient.auth.admin.createUser({
     email,
@@ -33,57 +28,23 @@ export async function createUserAction(formData: FormData) {
     email_confirm: true,
     user_metadata: { nom, prenom, telephone },
   });
-  if (error || !data.user) return { error: error?.message ?? 'Création impossible.' };
 
-  const { error: updateError } = await adminClient
-    .from('profiles')
-    .update({ role, status })
-    .eq('id', data.user.id);
-  if (updateError) return { error: updateError.message };
-
-  revalidatePath('/admin/users');
-  return { success: true };
-}
-
-export async function updateUserRoleAction(userId: string, formData: FormData) {
-  const auth = await requireAdmin();
-  if (!auth) return { error: 'Accès refusé.' };
-
-  const role = String(formData.get('role') ?? '') as Role;
-  if (!ROLES.includes(role)) return { error: 'Rôle invalide.' };
-  if (userId === auth.user.id && role !== 'admin') {
-    return { error: 'Vous ne pouvez pas retirer votre propre rôle admin.' };
+  if (error || !data.user) {
+    return { error: error?.message ?? 'Création impossible.' };
   }
 
-  const { error } = await auth.supabase.from('profiles').update({ role }).eq('id', userId);
-  if (error) return { error: error.message };
+  // Le trigger handle_new_user crée le profil en client/approved : on corrige le rôle
+  const { error: updateError } = await adminClient
+    .from('profiles')
+    .update({ role, status: 'approved', nom, prenom, telephone })
+    .eq('id', data.user.id);
 
-  revalidatePath('/admin/users');
-  return { success: true };
-}
+  if (updateError) {
+    // Ne pas laisser un compte à moitié configuré : on le supprime
+    await adminClient.auth.admin.deleteUser(data.user.id);
+    return { error: `Profil non configuré : ${updateError.message}` };
+  }
 
-export async function updateUserStatusAction(userId: string, status: string) {
-  const auth = await requireAdmin();
-  if (!auth) return { error: 'Accès refusé.' };
-
-  if (!STATUTS_UTILISATEUR.includes(status as StatutUtilisateur)) return { error: 'Statut invalide.' };
-  if (userId === auth.user.id) return { error: 'Vous ne pouvez pas modifier votre propre statut.' };
-
-  const { error } = await auth.supabase.from('profiles').update({ status }).eq('id', userId);
-  if (error) return { error: error.message };
-
-  revalidatePath('/admin/users');
-  return { success: true };
-}
-
-export async function deleteUserAction(userId: string) {
-  const auth = await requireAdmin();
-  if (!auth) return { error: 'Accès refusé.' };
-  if (userId === auth.user.id) return { error: 'Vous ne pouvez pas supprimer votre propre compte.' };
-
-  const { error } = await adminClient.auth.admin.deleteUser(userId);
-  if (error) return { error: error.message };
-
-  revalidatePath('/admin/users');
+  revalidatePath('/admin/managers');
   return { success: true };
 }
