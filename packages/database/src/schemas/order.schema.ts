@@ -10,6 +10,8 @@ export const orderSchema = z.object({
   adresse_liv_id: z.string().uuid().nullable(),
   statut: statutCommandeSchema,
   total: z.number(),
+  remise: z.number(),
+  expediee_at : z.string().nullable(),
   created_at: z.string(),
 }) satisfies z.ZodType<Tables<'orders'>>;
 
@@ -19,7 +21,9 @@ export const orderInsertSchema = z.object({
   adresse_liv_id: z.string().uuid().nullable().optional(),
   statut: statutCommandeSchema.optional(),
   total: z.number().optional(),
-  created_at: z.string().optional(),
+  remise: z.number(),
+  expediee_at : z.string().nullable(),
+  created_at: z.string()
 }) satisfies z.ZodType<TablesInsert<'orders'>>;
 
 export const orderUpdateSchema = z.object({
@@ -28,7 +32,9 @@ export const orderUpdateSchema = z.object({
   adresse_liv_id: z.string().uuid().nullable().optional(),
   statut: statutCommandeSchema.optional(),
   total: z.number().optional(),
-  created_at: z.string().optional(),
+  remise: z.number(),
+  expediee_at : z.string().nullable(),
+  created_at: z.string()
 }) satisfies z.ZodType<TablesUpdate<'orders'>>;
 
 // orders items

@@ -26,6 +26,13 @@ const STATUT_LABEL: Record<string, string> = {
   pending: 'En attente',
 };
 
+function versWhatsapp(numero: string | null): string | null {
+  if (!numero) return null;
+  const chiffres = numero.replace(/\D/g, '');
+  if (!chiffres) return null;
+  return chiffres.startsWith('0') ? `213${chiffres.slice(1)}` : chiffres;
+}
+
 export default async function ClientsPage({
   searchParams,
 }: {
@@ -35,22 +42,21 @@ export default async function ClientsPage({
   const auth = await requireRole(['admin', 'manager']);
   const isAdmin = auth.role === 'admin';
 
- const { data, error } = await auth.supabase.rpc('liste_clients');
+  const { data, error } = await auth.supabase.rpc('liste_clients');
 
-if (error) {
-  return <p className="text-xs text-destructive">Erreur de chargement : {error.message}</p>;
-}
+  if (error) {
+    return <p className="text-xs text-destructive">Erreur de chargement : {error.message}</p>;
+  }
 
-const lignes = (data ?? []) as ClientLigne[];
+  const lignes: ClientLigne[] = data ?? [];
+  const recherche = (q ?? '').trim().toLowerCase();
 
-const recherche = (q ?? '').trim().toLowerCase();
-const clients = lignes.filter((c: ClientLigne) => {
-  if (!recherche) return true;
-  return [c.nom, c.prenom, c.email, c.telephone]
-    .filter((v): v is string => Boolean(v))
-    .some((v: string) => v.toLowerCase().includes(recherche));
-});
-
+  const clients: ClientLigne[] = lignes.filter((c: ClientLigne) => {
+    if (!recherche) return true;
+    return [c.nom, c.prenom, c.email, c.telephone]
+      .filter((v): v is string => Boolean(v))
+      .some((v: string) => v.toLowerCase().includes(recherche));
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -96,11 +102,13 @@ const clients = lignes.filter((c: ClientLigne) => {
             {clients.length > 0 ? (
               clients.map((c: ClientLigne) => {
                 const statut = c.status ?? 'pending';
-                const whatsapp = c.whatsapp?.replace(/\D/g, '');
+                const whatsapp = versWhatsapp(c.whatsapp);
+                const nomComplet = `${c.prenom ?? ''} ${c.nom ?? ''}`.trim();
+
                 return (
                   <tr key={c.id} className="hover:bg-muted/30">
                     <td className="p-4 font-semibold text-foreground">
-                      {c.prenom || c.nom ? `${c.prenom ?? ''} ${c.nom ?? ''}`.trim() : 'Sans nom'}
+                      {nomComplet || 'Sans nom'}
                     </td>
                     <td className="p-4">
                       <div className="text-muted-foreground">{c.email ?? '—'}</div>
@@ -111,7 +119,7 @@ const clients = lignes.filter((c: ClientLigne) => {
                       )}
                       {whatsapp && (
                         <a
-                          href={`https://wa.me/${whatsapp.startsWith('0') ? `213${whatsapp.slice(1)}` : whatsapp}`}
+                          href={`https://wa.me/${whatsapp}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block text-shop-orange hover:underline"
@@ -125,7 +133,11 @@ const clients = lignes.filter((c: ClientLigne) => {
                       {new Date(c.created_at).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${STATUT_STYLE[statut] ?? ''}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                          STATUT_STYLE[statut] ?? ''
+                        }`}
+                      >
                         {STATUT_LABEL[statut] ?? statut}
                       </span>
                     </td>

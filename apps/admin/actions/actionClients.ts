@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireRole } from './helper';
-import { adminClient } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 export async function setClientStatutAction(clientId: string, statut: 'approved' | 'blocked') {
   const auth = await requireRole(['admin']).catch(() => null);
@@ -22,7 +22,7 @@ export async function setClientStatutAction(clientId: string, statut: 'approved'
     return { error: 'Seuls les comptes clients peuvent être bloqués ici.' };
   }
 
-  const { error } = await adminClient.from('profiles').update({ status: statut }).eq('id', clientId);
+  const { error } = await getAdminClient().from('profiles').update({ status: statut }).eq('id', clientId);
   if (error) return { error: error.message };
 
   revalidatePath('/admin/clients');

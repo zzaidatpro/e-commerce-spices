@@ -49,6 +49,41 @@ export type Database = {
           },
         ];
       };
+      codes_livraison: {
+        Row: {
+          code_hash: string;
+          created_at: string;
+          expires_at: string;
+          order_id: string;
+          tentatives: number;
+          used_at: string | null;
+        };
+        Insert: {
+          code_hash: string;
+          created_at?: string;
+          expires_at: string;
+          order_id: string;
+          tentatives?: number;
+          used_at?: string | null;
+        };
+        Update: {
+          code_hash?: string;
+          created_at?: string;
+          expires_at?: string;
+          order_id?: string;
+          tentatives?: number;
+          used_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'codes_livraison_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: true;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       favoris: {
         Row: {
           created_at: string;
@@ -76,6 +111,41 @@ export type Database = {
           {
             foreignKeyName: 'favoris_profile_id_fkey';
             columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      feedbacks: {
+        Row: {
+          created_at: string;
+          from_profile_id: string;
+          id: string;
+          message: string;
+          status: string;
+          subject: string;
+        };
+        Insert: {
+          created_at?: string;
+          from_profile_id: string;
+          id?: string;
+          message: string;
+          status?: string;
+          subject: string;
+        };
+        Update: {
+          created_at?: string;
+          from_profile_id?: string;
+          id?: string;
+          message?: string;
+          status?: string;
+          subject?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'feedbacks_from_profile_id_fkey';
+            columns: ['from_profile_id'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -126,7 +196,9 @@ export type Database = {
           adresse_liv_id: string | null;
           client_id: string | null;
           created_at: string;
+          expediee_at: string | null;
           id: string;
+          remise: number;
           statut: Database['public']['Enums']['statut_commande'];
           total: number;
         };
@@ -134,7 +206,9 @@ export type Database = {
           adresse_liv_id?: string | null;
           client_id?: string | null;
           created_at?: string;
+          expediee_at?: string | null;
           id?: string;
+          remise?: number;
           statut?: Database['public']['Enums']['statut_commande'];
           total?: number;
         };
@@ -142,7 +216,9 @@ export type Database = {
           adresse_liv_id?: string | null;
           client_id?: string | null;
           created_at?: string;
+          expediee_at?: string | null;
           id?: string;
+          remise?: number;
           statut?: Database['public']['Enums']['statut_commande'];
           total?: number;
         };
@@ -157,6 +233,38 @@ export type Database = {
           {
             foreignKeyName: 'orders_client_id_fkey';
             columns: ['client_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      parametres_site: {
+        Row: {
+          cle: string;
+          libelle: string;
+          updated_at: string;
+          updated_by: string | null;
+          valeur: Json;
+        };
+        Insert: {
+          cle: string;
+          libelle: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          valeur: Json;
+        };
+        Update: {
+          cle?: string;
+          libelle?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          valeur?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parametres_site_updated_by_fkey';
+            columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -379,6 +487,34 @@ export type Database = {
     };
     Functions: {
       a_achete_produit: { Args: { p_produit_id: string }; Returns: boolean };
+      commandes_a_relancer: {
+        Args: never;
+        Returns: {
+          client_email: string;
+          client_nom: string;
+          client_prenom: string;
+          client_telephone: string;
+          client_whatsapp: string;
+          code_expire_at: string;
+          expediee_depuis: string;
+          order_id: string;
+          total: number;
+        }[];
+      };
+      confirmer_livraison: {
+        Args: { p_code: string; p_order: string };
+        Returns: Json;
+      };
+      contact_client_commande: {
+        Args: { p_order: string };
+        Returns: {
+          email: string;
+          nom: string;
+          prenom: string;
+          telephone: string;
+          whatsapp: string;
+        }[];
+      };
       create_order: {
         Args: {
           p_adresse: string;
@@ -390,9 +526,24 @@ export type Database = {
       };
       est_admin: { Args: never; Returns: boolean };
       est_staff: { Args: never; Returns: boolean };
+      generer_code_livraison: { Args: { p_order: string }; Returns: string };
       is_admin_or_livreur: {
         Args: { allowed_roles: string[] };
         Returns: boolean;
+      };
+      liste_clients: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          email: string;
+          id: string;
+          nb_commandes: number;
+          nom: string;
+          prenom: string;
+          status: string;
+          telephone: string;
+          whatsapp: string;
+        }[];
       };
       mon_role: { Args: never; Returns: string };
       mon_statut: { Args: never; Returns: string };
@@ -402,7 +553,7 @@ export type Database = {
       };
     };
     Enums: {
-      statut_commande: 'en_attente' | 'pay├⌐e' | 'exp├⌐di├⌐e' | 'livr├⌐e' | 'annul├⌐e';
+      statut_commande: 'en_attente' | 'payée' | 'expediée' | 'livrée' | 'annulée';
       statut_profil: 'pending' | 'approved' | 'blocked';
       type_emplacement: 'maison' | 'magasin' | 'depot';
       type_role: 'client' | 'admin' | 'livreur' | 'manager';
@@ -528,7 +679,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      statut_commande: ['en_attente', 'pay├⌐e', 'exp├⌐di├⌐e', 'livr├⌐e', 'annul├⌐e'],
+      statut_commande: ['en_attente', 'payée', 'expediée', 'livrée', 'annulée'],
       statut_profil: ['pending', 'approved', 'blocked'],
       type_emplacement: ['maison', 'magasin', 'depot'],
       type_role: ['client', 'admin', 'livreur', 'manager'],

@@ -86,7 +86,7 @@ export default async function RegionDetailPage({ params }: PageProps) {
 
                 <div className="pt-2 flex items-center justify-between border-t border-border/40">
                   <span className="font-bold text-shop-orange text-sm">
-                    {product.prix ? `${product.prix} €` : ""}
+                    {product.prix ? `${product.prix} Da` : ""}
                   </span>
                   <span className="text-xs font-medium text-foreground group-hover:translate-x-1 transition-transform">
                     Voir →

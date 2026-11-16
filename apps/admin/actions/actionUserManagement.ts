@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireRole } from './helper';
-import { adminClient } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 const ROLES_CREABLES = ['manager', 'livreur'] as const;
 type RoleCreable = (typeof ROLES_CREABLES)[number];
@@ -22,7 +22,7 @@ export async function creerCompteStaffAction(formData: FormData) {
   if (password.length < 8) return { error: 'Le mot de passe doit contenir au moins 8 caractères.' };
   if (!ROLES_CREABLES.includes(role)) return { error: 'Rôle invalide.' };
 
-  const { data, error } = await adminClient.auth.admin.createUser({
+  const { data, error } = await getAdminClient().auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -34,14 +34,14 @@ export async function creerCompteStaffAction(formData: FormData) {
   }
 
   // Le trigger handle_new_user crée le profil en client/approved : on corrige le rôle
-  const { error: updateError } = await adminClient
+  const { error: updateError } = await getAdminClient()
     .from('profiles')
     .update({ role, status: 'approved', nom, prenom, telephone })
     .eq('id', data.user.id);
 
   if (updateError) {
     // Ne pas laisser un compte à moitié configuré : on le supprime
-    await adminClient.auth.admin.deleteUser(data.user.id);
+    await getAdminClient().auth.admin.deleteUser(data.user.id);
     return { error: `Profil non configuré : ${updateError.message}` };
   }
 
