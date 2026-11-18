@@ -9,3 +9,5 @@ export * from './types/history';
 export * from './types/catalog';
 export * from './types/cart';
 export * from './client/constants'
+export * from './schemas/retour.schema';
+export * from './schemas/promo.schema';

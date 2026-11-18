@@ -4,9 +4,15 @@ import { AUTH_COOKIE_NAME } from '@repo/database';
 
 export function middleware(request: NextRequest) {
   return guardRequest(request, {
-    allowedRoles: ['client', 'livreur', 'admin'],
-    routeRules : [
-      { prefix: '/livraisons', roles: ['livreur'] },
+    // Le web accueille que les clients et les livreurs
+    allowedRoles: ['client', 'livreur'],
+    routeRules: [
+      { prefix: '/livraisons', roles: ['livreur'], forbiddenPath: '/dashboard' },
+      { prefix: '/dashboard', roles: ['client'], forbiddenPath: '/livraisons' },
+      { prefix: '/orders', roles: ['client'], forbiddenPath: '/livraisons' },
+      { prefix: '/wishlist', roles: ['client'], forbiddenPath: '/livraisons' },
+      { prefix: '/checkout', roles: ['client'], forbiddenPath: '/livraisons' },
+      { prefix: '/account', roles: ['client'], forbiddenPath: '/livraisons' },
     ],
     loginPath: '/',
     forbiddenPath: '/unauthorized',
@@ -15,5 +21,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/account/:path*', '/dashboard/:path*', '/livraisons/:path*', '/wishlist/:path*'],
+  matcher: [
+    '/dashboard/:path*',
+    '/orders/:path*',
+    '/wishlist/:path*',
+    '/checkout/:path*',
+    '/account/:path*',
+    '/livraisons/:path*',
+  ],
 };

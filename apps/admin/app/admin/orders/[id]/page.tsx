@@ -2,94 +2,143 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/actions/helper';
 import { STATUT_LABELS } from '@/lib/commandes';
+import { versWhatsapp } from '@/lib/whatsapp';
+import { RemiseForm } from '@/components/molecules/OrderActions';
+import { EncaissementForm } from '@/components/molecules/VenteActions';
 import {
-  OrderStatusForm,
-  RemiseForm,
-  CodeLivraisonButton,
-} from '@/components/molecules/OrderActions';
+  LivreurForm,
+  CodeLivraisonPanel,
+  ExpedierButton,
+  ActionStatutButton,
+  type Livreur,
+  type EtatCode,
+} from '@/components/molecules/WorkflowLivraison';
+
+type Ligne = {
+  id: string;
+  quantite: number;
+  prix_facture: number;
+  produits: { nom: string } | { nom: string }[] | null;
+};
+
+type Contact = {
+  nom: string | null;
+  prenom: string | null;
+  email: string | null;
+  telephone: string | null;
+  whatsapp: string | null;
+};
+
+const ETAPES = [
+  'Commande reçue',
+  'Livreur désigné',
+  'Code envoyé au livreur',
+  'En livraison',
+  'Colis remis',
+  'Vente confirmée',
+];
+
+const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
+const date = (d: string) =>
+  new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const auth = await requireRole(['admin', 'manager']);
-  const supabase = auth.supabase;
+  const sb = auth.supabase;
   const isAdmin = auth.role === 'admin';
 
-  const { data: order, error } = await supabase
+  const { data: order, error } = await sb
     .from('orders')
-    .select('id, created_at, total, remise, statut, adresse_liv_id, expediee_at')
+    .select('id, created_at, total, remise, statut, adresse_liv_id, livreur_id, expediee_at, remise_at, vente_confirmee_at')
     .eq('id', id)
     .maybeSingle();
 
   if (error) return <p className="text-xs text-destructive">Erreur : {error.message}</p>;
   if (!order) notFound();
 
-  const [itemsRes, adresseRes, contactRes] = await Promise.all([
-    supabase
-      .from('order_items')
-      .select('id, quantite, prix_facture, produits(nom)')
-      .eq('order_id', id),
+  const [itemsRes, adresseRes, contactRes, livreursRes, etatRes] = await Promise.all([
+    sb.from('order_items').select('id, quantite, prix_facture, produits(nom)').eq('order_id', id),
     order.adresse_liv_id
-      ? supabase
-          .from('adresses_livraison')
-          .select('adresse_complete, type_lieu, url_google_maps')
-          .eq('id', order.adresse_liv_id)
-          .maybeSingle()
+      ? sb.from('adresses_livraison').select('adresse_complete, type_lieu').eq('id', order.adresse_liv_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    supabase.rpc('contact_client_commande', { p_order: id }),
+    sb.rpc('contact_client_commande', { p_order: id }),
+    sb.rpc('liste_livreurs'),
+    sb.rpc('etat_code_livraison', { p_order: id }),
   ]);
 
-  const items = itemsRes.data ?? [];
-  const adresse = adresseRes.data;
-  const contact = contactRes.data?.[0];
-  const waDigits = contact?.whatsapp?.replace(/\D/g, '');
+  const items = (itemsRes.data ?? []) as Ligne[];
+  const adresse = adresseRes.data as { adresse_complete: string; type_lieu: string } | null;
+  const contact = (contactRes.data?.[0] ?? null) as Contact | null;
+  const livreurs = (livreursRes.data ?? []) as Livreur[];
+  const etat = (etatRes.data?.[0] ?? null) as EtatCode | null;
 
-  const sousTotal = items.reduce(
-    (s: number, i: { quantite: number; prix_facture: number }) =>
-      s + Number(i.quantite) * Number(i.prix_facture),
-    0
-  );
+  const statut = order.statut as string;
+  const ouvert = statut === 'en_attente' || statut === 'payée';
+  const expediee = statut === 'expédiée';
+  const livree = statut === 'livrée';
+  const confirmee = statut === 'confirmée' || statut === 'remboursée';
+  const annulee = statut === 'annulée';
 
-  const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
-  const peutGenererCode = order.statut === 'payée' || order.statut === 'expédiée';
+  const codeEnvoye = !!etat?.envoye_at;
+  const livreur = livreurs.find((l) => l.id === order.livreur_id) ?? null;
+  const reference = order.id.slice(0, 8);
+  const sousTotal = items.reduce((s, i) => s + Number(i.quantite) * Number(i.prix_facture), 0);
+  const nomProduit = (p: Ligne['produits']) => (Array.isArray(p) ? p[0]?.nom : p?.nom) ?? 'Produit supprimé';
+  const whatsappClient = versWhatsapp(contact?.whatsapp);
+
+  const atteint = [
+    true,
+    !!order.livreur_id,
+    codeEnvoye,
+    expediee || livree || confirmee,
+    livree || confirmee,
+    confirmee,
+  ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-6 max-w-6xl">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
           <Link href="/admin/orders" className="text-xs text-muted-foreground hover:underline">
-            ← Retour aux commandes
+            ← Commandes
           </Link>
-          <h1 className="text-xl font-bold text-foreground mt-1">Commande #{order.id.slice(0, 8)}</h1>
-          <p className="text-xs text-muted-foreground">
-            Passée le{' '}
-            {new Date(order.created_at).toLocaleDateString('fr-FR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            {order.expediee_at &&
-              ` · expédiée le ${new Date(order.expediee_at).toLocaleDateString('fr-FR')}`}
-          </p>
+          <h1 className="text-xl font-bold text-foreground mt-1">Commande #{reference}</h1>
+          <p className="text-xs text-muted-foreground">Passée le {date(order.created_at)}</p>
         </div>
-        <OrderStatusForm orderId={order.id} statut={order.statut} />
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-bold w-fit ${
+            annulee ? 'bg-red-500/10 text-red-600' : 'bg-muted text-foreground'
+          }`}
+        >
+          {STATUT_LABELS[statut] ?? statut}
+        </span>
       </div>
 
+      {!annulee && (
+        <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] border border-border rounded-2xl bg-card p-4">
+          {ETAPES.map((label, i) => (
+            <li key={label} className="flex items-center gap-2">
+              {i > 0 && <span className="text-muted-foreground">•</span>}
+              <span className={atteint[i] ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
+                {label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Colonne principale : articles et totaux */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           <section className="border border-border rounded-2xl bg-card p-6">
-            <h2 className="text-sm font-bold text-foreground mb-4">Articles</h2>
-            <div className="divide-y divide-border">
-              {items.map((item: any) => (
-                <div key={item.id} className="py-3 flex justify-between text-xs">
+            <h2 className="text-sm font-bold text-foreground mb-4">Commande du client</h2>
+            <div className="divide-y divide-border text-xs">
+              {items.map((i) => (
+                <div key={i.id} className="py-3 flex justify-between">
                   <span>
-                    {item.produits?.nom ?? 'Produit supprimé'} × {item.quantite}
+                    {nomProduit(i.produits)} × {i.quantite}
                   </span>
-                  <span className="font-semibold">
-                    {euros(Number(item.quantite) * Number(item.prix_facture))}
-                  </span>
+                  <span className="font-semibold">{euros(Number(i.quantite) * Number(i.prix_facture))}</span>
                 </div>
               ))}
             </div>
@@ -105,42 +154,86 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </div>
               )}
               <div className="flex justify-between font-bold text-sm">
-                <span>Total à payer</span>
+                <span>Total</span>
                 <span className="text-shop-orange">{euros(Number(order.total))}</span>
               </div>
             </div>
           </section>
 
-          <section className="border border-border rounded-2xl bg-card p-6 text-xs">
-            <h2 className="text-sm font-bold text-foreground mb-3">Livraison</h2>
+          <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4 text-xs">
+            <h2 className="text-sm font-bold text-foreground">Livraison</h2>
             {adresse ? (
-              <>
+              <div>
                 <p className="text-foreground">{adresse.adresse_complete}</p>
                 <p className="text-muted-foreground capitalize">Lieu : {adresse.type_lieu}</p>
-                {adresse.url_google_maps && (
-                  <a
-                    href={adresse.url_google_maps}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-shop-orange hover:underline"
-                  >
-                    Ouvrir dans Google Maps
-                  </a>
-                )}
-              </>
+              </div>
             ) : (
-              <p className="text-muted-foreground">Adresse non renseignée.</p>
+              <p className="text-muted-foreground">Aucune adresse liée à cette commande.</p>
+            )}
+
+            {ouvert ? (
+              <LivreurForm orderId={order.id} livreurs={livreurs} livreurId={order.livreur_id} />
+            ) : (
+              <p>
+                Livreur :{' '}
+                <span className="font-semibold">
+                  {livreur ? `${livreur.prenom ?? ''} ${livreur.nom ?? ''}`.trim() : '—'}
+                </span>
+              </p>
             )}
           </section>
+
+          {ouvert && (
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4">
+              <h2 className="text-sm font-bold text-foreground">Code de livraison et expédition</h2>
+              <CodeLivraisonPanel orderId={order.id} reference={reference} livreur={livreur} etat={etat} />
+              <ExpedierButton
+                orderId={order.id}
+                livreurId={order.livreur_id ?? ''}
+                pret={!!order.livreur_id && codeEnvoye}
+              />
+            </section>
+          )}
+
+          {expediee && (
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-2 text-xs">
+              <h2 className="text-sm font-bold text-foreground">En attente de la remise</h2>
+              <p className="text-muted-foreground">
+                Le livreur a le colis. En attente de la saisie du code par le client sur son dashboard.
+              </p>
+              <p className="text-muted-foreground">
+                Expédiée le {order.expediee_at ? date(order.expediee_at) : '—'}
+                {etat?.expires_at && ` · code valable jusqu'au ${date(etat.expires_at)}`}.
+              </p>
+            </section>
+          )}
+
+          {livree && (
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
+              <h2 className="text-sm font-bold text-foreground">Encaissement</h2>
+              <p className="text-xs text-muted-foreground">
+                Colis remis le {order.remise_at ? date(order.remise_at) : '—'}. Le livreur remet l'argent : saisissez son
+                code et le montant reçu.
+              </p>
+              <EncaissementForm orderId={order.id} total={Number(order.total)} />
+            </section>
+          )}
+
+          {confirmee && (
+            <section className="border border-border rounded-2xl bg-card p-6 text-xs">
+              <h2 className="text-sm font-bold text-foreground mb-2">Vente confirmée</h2>
+              <p className="text-muted-foreground">
+                Confirmée le {order.vente_confirmee_at ? date(order.vente_confirmee_at) : '—'}. Le délai de retour de 7
+                jours court à partir de cette date.
+              </p>
+            </section>
+          )}
         </div>
 
-        {/* Colonne latérale : client, livraison, remise */}
         <div className="flex flex-col gap-6">
           <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-2 text-xs">
             <h2 className="text-sm font-bold text-foreground">Client</h2>
-            {contactRes.error ? (
-              <p className="text-destructive">Coordonnées indisponibles.</p>
-            ) : contact ? (
+            {contact ? (
               <>
                 <p className="font-semibold text-foreground">
                   {contact.prenom} {contact.nom}
@@ -151,9 +244,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     {contact.telephone}
                   </a>
                 )}
-                {waDigits && (
+                {whatsappClient && (
                   <a
-                    href={`https://wa.me/${waDigits}`}
+                    href={`https://wa.me/${whatsappClient}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-shop-orange hover:underline"
@@ -163,21 +256,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 )}
               </>
             ) : (
-              <p className="text-muted-foreground">Client introuvable.</p>
+              <p className="text-muted-foreground">Coordonnées indisponibles.</p>
             )}
           </section>
 
-          {peutGenererCode && (
-            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
-              <h2 className="text-sm font-bold text-foreground">Livraison au client</h2>
-              <CodeLivraisonButton orderId={order.id} />
-            </section>
-          )}
-
-          {isAdmin && (
+          {isAdmin && !livree && !confirmee && !annulee && (
             <section className="border border-border rounded-2xl bg-card p-6">
               <h2 className="text-sm font-bold text-foreground mb-3">Remise</h2>
               <RemiseForm orderId={order.id} remise={Number(order.remise)} />
+            </section>
+          )}
+
+          {ouvert && (
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
+              {statut === 'en_attente' && (
+                <ActionStatutButton orderId={order.id} statut="payée" libelle="Valider la commande" />
+              )}
+              <ActionStatutButton orderId={order.id} statut="annulée" libelle="Annuler la commande" danger />
             </section>
           )}
         </div>

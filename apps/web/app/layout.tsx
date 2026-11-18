@@ -5,8 +5,9 @@ import Footer from "../components/organisms/footer";
 import Header from "../components/organisms/header";
 import "../app/globals.css";
 import { ThemeProvider } from "@/components/templates/theme-provider";
+import { getRoleSite } from "@/lib/session-role";
+import { RoleProvider } from '@/lib/role-context';
 
-// Configuration de la police Poppins
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -18,23 +19,22 @@ export const metadata: Metadata = {
   description: "Spices",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { role } = await getRoleSite();
+
   return (
     <html lang="fr" className={cn("font-sans", poppins.variable)} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Header />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <RoleProvider role={role}>
+          <Header role={role} />
           {children}
-          <Footer />
+          <Footer role={role} />
+          </RoleProvider>
         </ThemeProvider>
       </body>
     </html>

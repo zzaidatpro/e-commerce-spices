@@ -132,7 +132,7 @@ export default function RegisterPage() {
                   id="role"
                   name="role"
                   defaultValue="manager"
-                  className="w-full px-3 py-2.5 border border-border rounded-xl bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-shop-orange/50 cursor-pointer h-[42px]"
+                  className="w-full px-3 py-2.5 border border-border rounded-xl bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-shop-orange/50 cursor-pointer h-10.5"
                 >
                   <option value="manager">Manager</option>
                   <option value="admin">Administrateur</option>

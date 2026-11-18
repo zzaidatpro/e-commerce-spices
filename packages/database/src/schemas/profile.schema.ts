@@ -13,7 +13,9 @@ export const profileSchema = z.object({
   whatsapp: z.string().nullable(),
   date_naissance: z.string().nullable(),
   role: typeRoleSchema,
-  status: z.string(), 
+  status: statutProfilSchema,
+  code_livreur: z.string().length(6).nullable(),
+  peut_generer_promo: z.boolean(),
   created_at: z.string(),
 }) satisfies z.ZodType<Tables<'profiles'>>;
 
@@ -26,12 +28,13 @@ export const profileInsertSchema = z.object({
   whatsapp: z.string().nullable().optional(),
   date_naissance: z.string().nullable().optional(),
   role: typeRoleSchema.optional(),
-  status: z.string().optional(),
+  status: statutProfilSchema.optional(),
+  peut_generer_promo: z.boolean().optional(),
   created_at: z.string().optional(),
 }) satisfies z.ZodType<TablesInsert<'profiles'>>;
 
+// code_livreur n'est jamais modifiable : il est généré par trigger et figé
 export const profileUpdateSchema = z.object({
-  id: z.string().uuid().optional(),
   nom: z.string().optional(),
   prenom: z.string().optional(),
   email: z.string().nullable().optional(),
@@ -39,6 +42,6 @@ export const profileUpdateSchema = z.object({
   whatsapp: z.string().nullable().optional(),
   date_naissance: z.string().nullable().optional(),
   role: typeRoleSchema.optional(),
-  status: z.string().optional(),
-  created_at: z.string().optional(),
+  status: statutProfilSchema.optional(),
+  peut_generer_promo: z.boolean().optional(),
 }) satisfies z.ZodType<TablesUpdate<'profiles'>>;

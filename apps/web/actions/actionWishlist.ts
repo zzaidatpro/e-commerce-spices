@@ -1,45 +1,45 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@repo/database/server';
+import { requireClient } from '@/lib/auth-client';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function ajouterFavori(produitId: string) {
+type ResultatAction = { success?: boolean; error?: string };
+
+export async function ajouterFavori(produitId: string): Promise<ResultatAction> {
   if (!UUID_RE.test(produitId)) return { error: 'Produit invalide.' };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Connexion requise.' };
+  const auth = await requireClient();
+  if (!auth) return { error: 'Espace réservé aux clients.' };
 
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from('favoris')
     .upsert(
-      { profile_id: user.id, produit_id: produitId },
+      { profile_id: auth.user.id, produit_id: produitId },
       { onConflict: 'profile_id,produit_id', ignoreDuplicates: true }
     );
 
   if (error) return { error: error.message };
 
-  revalidatePath('/wishlist');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
-export async function retirerFavori(produitId: string) {
+export async function retirerFavori(produitId: string): Promise<ResultatAction> {
   if (!UUID_RE.test(produitId)) return { error: 'Produit invalide.' };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Connexion requise.' };
+  const auth = await requireClient();
+  if (!auth) return { error: 'Espace réservé aux clients.' };
 
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from('favoris')
     .delete()
-    .eq('profile_id', user.id)
+    .eq('profile_id', auth.user.id)
     .eq('produit_id', produitId);
 
   if (error) return { error: error.message };
 
-  revalidatePath('/wishlist');
+  revalidatePath('/', 'layout');
   return { success: true };
 }

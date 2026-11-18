@@ -11,6 +11,7 @@ export function isUserRole(value: unknown): value is UserRole {
 export interface RouteRule {
   prefix: string;
   roles: readonly UserRole[];
+  forbiddenPath?: string;
 }
 
 export interface GuardOptions {
@@ -90,7 +91,7 @@ export async function guardRequest(request: NextRequest, opts: GuardOptions) {
 
   if (rule && !rule.roles.includes(role)) {
     log('SORTIE regle de route', { role, rule });
-    return NextResponse.redirect(new URL(opts.forbiddenPath, request.url));
+    return NextResponse.redirect(new URL(rule.forbiddenPath ?? opts.forbiddenPath, request.url));
   }
 
   log('ACCES AUTORISE', { role });

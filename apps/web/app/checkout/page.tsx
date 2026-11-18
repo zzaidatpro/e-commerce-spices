@@ -34,6 +34,12 @@ export default function CheckoutPage() {
 
   const [isEditingAddress, setIsEditingAddress] = useState(false);
 
+  type AdresseLigne = {
+    adresse_complete: string;
+    type_lieu: "maison" | "magasin" | "depot";
+    url_google_maps: string | null;
+  };
+
   useEffect(() => {
     const fetchUserAddress = async () => {
       try {
@@ -42,19 +48,20 @@ export default function CheckoutPage() {
         } = await supabase.auth.getUser();
         if (!user) return;
 
-        // dernière adresse de livraison connue
         const { data: addressData } = await supabase
           .from("adresses_livraison")
-          .select("*")
+          .select("adresse_complete, type_lieu, url_google_maps")
           .eq("profile_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (addressData) {
-          setAdresseComplete(addressData.adresse_complete || "");
-          setTypeLieu(addressData.type_lieu || "maison");
-          setUrlGoogleMaps(addressData.url_google_maps || "");
+        const adresse = addressData as AdresseLigne | null;
+
+        if (adresse) {
+          setAdresseComplete(adresse.adresse_complete || "");
+          setTypeLieu(adresse.type_lieu || "maison");
+          setUrlGoogleMaps(adresse.url_google_maps || "");
         } else {
           setIsEditingAddress(true);
         }

@@ -27,7 +27,6 @@ const MENU: { label: string; href: string; icon: typeof Package; roles: Role[] }
 export default function Sidebar({ role }: { role: string }) {
   const pathname = usePathname();
 
-  // L'accueil n'est actif que sur /admin exactement
   const estActif = (href: string) =>
     href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(href + '/');
 

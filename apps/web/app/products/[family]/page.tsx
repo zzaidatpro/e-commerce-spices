@@ -2,37 +2,42 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createUserClient } from '@repo/database/client';
 import { ArrowLeft, Tag, MapPin } from 'lucide-react';
-import AddToCartButton from '@/components/atoms/AddToCartButton'; 
+import { createClient } from '@repo/database/server';
+import AddToCartButton from '@/components/atoms/AddToCartButton';
 
 interface ProductDetailPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = await params;
-  const supabase = await createUserClient();
+  const supabase = await createClient();
 
-  // Récupération du produit depuis Supabase
   const { data: product, error } = await supabase
     .from('produits')
-    .select('*')
+    .select('id, nom, slug, description, prix_unitaire, image_url, family, region, stock')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
-  if (error || !product) {
+  if (error) {
+    console.error('Erreur produit :', error.message);
+  }
+
+  if (!product) {
     notFound();
   }
 
-  const imageUrl = product.image_url ||'/placeholder.png';
+  const prix = Number(product.prix_unitaire);
+  const enRupture = product.stock === 0;
+
   const cartProductPayload = {
     id: product.id,
     name: product.nom,
-    price: product.prix_unitaire || 0,
-    image: product.image_url,
+    slug: product.slug ?? slug,
+    price: prix,
+    image: product.image_url ?? undefined,
+    weight: product.region ?? undefined,
   };
 
   return (
@@ -46,23 +51,29 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background p-6 rounded-2xl border border-border/60">
-        {/* Visuel du produit */}
+        {/* Visuel */}
         <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-muted">
-          <Image
-            src={imageUrl}
-            alt={product.nom}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
+          {product.image_url ? (
+            <Image
+              src={product.image_url}
+              alt={product.nom}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+              Image non disponible
+            </div>
+          )}
         </div>
 
-        {/* Informations détaillées */}
+        {/* Informations */}
         <div className="flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2 text-xs font-medium">
-              {(product.family) && (
+              {product.family && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-shop-orange/10 text-shop-orange">
                   <Tag className="w-3 h-3" />
                   {product.family}
@@ -76,23 +87,24 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               )}
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              {product.nom}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{product.nom}</h1>
 
             <div className="text-2xl font-semibold text-shop-orange">
-              {product.prix_unitaire ? `${product.prix} DZD` : 'Prix sur demande'}
+              {Number.isFinite(prix) ? `${prix.toFixed(2)} Da` : 'Prix sur demande'}
             </div>
+
+            {enRupture && (
+              <p className="text-sm font-semibold text-red-600">Rupture de stock</p>
+            )}
 
             <p className="text-muted-foreground text-sm leading-relaxed">
               {product.description || 'Aucune description disponible pour ce produit.'}
             </p>
           </div>
 
-          {/* Utilisation du composant client AddToCartButton */}
           <div className="pt-4 border-t border-border/40">
-            <AddToCartButton 
-              product={product} 
+            <AddToCartButton
+              product={cartProductPayload}
               className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-shop-orange hover:bg-shop-orange/90 text-white font-medium rounded-xl transition-colors shadow-sm cursor-pointer"
             />
           </div>

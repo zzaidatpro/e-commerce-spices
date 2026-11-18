@@ -7,48 +7,53 @@ import Logo from "../atoms/logo";
 import NavBar from "../molecules/navBar";
 import AdminBar from "../molecules/AdminBar";
 import { Badge } from "@repo/ui";
-import { headerData } from "../../../../packages/lib/src/headerData";
-import { CartSheet } from "../molecules/CartSheet";
+import { menuPourRole, type RoleSite } from "@repo/lib";
 import { useCart } from "@/lib/useCart";
 
-export default function Header() {
+interface HeaderProps {
+  role: RoleSite;
+}
+
+export default function Header({ role }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const { totalItems } = useCart();
+  const { totalItems, isHydrated } = useCart();
+
+  const estLivreur = role === "livreur";
+  const quantite = isHydrated ? totalItems : 0;
+  const liens = menuPourRole(role);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
         <div className="flex items-center justify-start">
           <Logo />
         </div>
 
-        {/* Navigation principale : Masquée sous 900px, affichée à partir de 900px */}
+        {/* Menu bureau : à partir de 900px */}
         <div className="hidden min-[900px]:flex items-center justify-center flex-1 px-8">
-          <NavBar />
+          <NavBar role={role} />
         </div>
 
-        {/* Zone d'actions : AdminBar (icônes) + Panier + Menu Burger */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* AdminBar (toujours visible) */}
           <AdminBar />
 
-          {/* Icône Panier */}
-          <Link
-            href="/cart"
-            className="p-2 text-foreground hover:text-shop-orange relative transition-colors"
-            aria-label="Panier"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {totalItems > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 bg-shop-light-green text-white text-[9px] font-bold">
-                {totalItems}
-              </Badge>
-            )}
-          </Link>
+          {/* Panier : visible sur toutes les tailles, sauf pour le livreur */}
+          {!estLivreur && (
+            <Link
+              href="/cart"
+              className="p-2 text-foreground hover:text-shop-orange relative transition-colors"
+              aria-label="Panier"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {quantite > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 bg-shop-light-green text-white text-[9px] font-bold">
+                  {quantite}
+                </Badge>
+              )}
+            </Link>
+          )}
 
-          {/* Bouton Burger : Affiché UNIQUEMENT en dessous de 900px */}
+          {/* Burger : en dessous de 900px */}
           <div className="flex min-[900px]:hidden items-center ml-1">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -61,14 +66,13 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Menu mobile / tablette déroulant (Masqué au-delà de 900px) */}
       {isOpen && (
-        <div className="min-[900px]:hidden w-full bg-background border-b border-border shadow-xl py-4 px-6 flex flex-col gap-3 z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="min-[900px]:hidden w-full bg-background border-b border-border shadow-xl py-4 px-6 flex flex-col gap-3 z-50">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
             Navigation
           </span>
           <div className="flex flex-col gap-2 w-full">
-            {headerData.map((item) => (
+            {liens.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

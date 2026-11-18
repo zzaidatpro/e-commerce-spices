@@ -1,4 +1,3 @@
-// AdminBar.tsx
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -144,37 +143,29 @@ export const AdminBar = ({ className }: AdminBarProps) => {
       <div className={cn("flex items-center justify-end gap-1.5", className)}>
         {!loading && (
           <>
-            {user ? (
-              <div className="flex items-center gap-1.5">
-                {/* Icône Profil Utilisateur */}
-                <div 
-                  className="p-2 text-foreground bg-secondary/60 rounded-md border border-border/60 flex items-center justify-center"
-                  title={user.email}
-                >
-                  <User className="w-4 h-4 text-shop-orange" />
-                </div>
-
-                {/* Accès Dashboard */}
-                <Link
-                  href="/dashboard"
-                  className="p-2 bg-shop-orange text-white hover:bg-shop-orange/90 rounded-md transition-colors shadow-xs flex items-center justify-center"
-                  title="Dashboard"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                </Link>
-
-                {/* Déconnexion */}
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="p-2 text-foreground hover:bg-secondary rounded-md transition-colors cursor-pointer border border-transparent hover:border-border/40 flex items-center justify-center disabled:opacity-50"
-                    title="Déconnexion"
-                    aria-label="Déconnexion"
-                  >
-                    <LogOut className={`w-4 h-4 text-muted-foreground ${isLoggingOut ? 'animate-pulse' : ''}`} />
-                  </button>
+           {user ? (
+            <div className="flex items-center gap-1.5">
+              <div
+                className="flex items-center gap-2 px-2 py-1.5 bg-secondary/60 rounded-md border border-border/60 max-w-48"
+                title={user.email}
+              >
+                <User className="w-4 h-4 text-shop-orange shrink-0" />
+                <span className="hidden sm:inline text-[11px] font-medium text-foreground truncate">
+                  {user.email}
+                </span>
               </div>
-            ) : (
+
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="p-2 text-foreground hover:bg-secondary rounded-md transition-colors cursor-pointer border border-transparent hover:border-border/40 flex items-center justify-center disabled:opacity-50"
+                title="Déconnexion"
+                aria-label="Déconnexion"
+              >
+                <LogOut className={`w-4 h-4 text-muted-foreground ${isLoggingOut ? 'animate-pulse' : ''}`} />
+              </button>
+            </div>
+             ) : (
               <div className="flex items-center gap-1.5">
                 {/* Icône Connexion */}
                 <button
