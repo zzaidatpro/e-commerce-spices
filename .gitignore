@@ -3,3 +3,7 @@ node_modules/
 .env*.local
 .turbo/
 supabase/.temp/
+.env.test
+coverage/
+test-results/
+playwright-report/
