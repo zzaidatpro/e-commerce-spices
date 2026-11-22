@@ -95,6 +95,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     livree || confirmee,
     confirmee,
   ];
+  
+  const { data: demandes } = await sb
+  .from('demandes_code')
+  .select('id, demande_at')
+  .eq('order_id', id)
+  .is('traitee_at', null);
+
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">

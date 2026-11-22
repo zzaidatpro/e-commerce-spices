@@ -27,3 +27,10 @@ export async function confirmerLivraisonAction(orderId: string, code: string): P
 
   return data as Resultat;
 }
+
+export async function demanderNouveauCodeAction(orderId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('demander_nouveau_code', { p_order: orderId });
+  if (error) return { ok: false, message: error.message };
+  return data as { ok: boolean; message: string };
+}

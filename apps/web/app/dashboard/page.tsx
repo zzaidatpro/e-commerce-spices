@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   <>
     {(enCours ?? []).map((c) => (
       <div key={c.id} className="max-w-6xl mx-auto px-4 pt-8">
-        <ConfirmerLivraisonForm orderId={c.id} reference={c.id.slice(0, 8)} />
+        <ConfirmerLivraisonForm orderId={c.id} />
       </div>
     ))}
     <DashboardForm

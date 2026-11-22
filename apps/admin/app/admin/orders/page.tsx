@@ -32,7 +32,6 @@ export default async function OrdersPage({
   if (error) {
     return <p className="text-xs text-destructive">Erreur de chargement : {error.message}</p>;
   }
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
