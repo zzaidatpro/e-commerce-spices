@@ -1,0 +1,1 @@
+alter type public.statut_commande add value if not exists 'terminée';

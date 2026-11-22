@@ -10,7 +10,9 @@ const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
 const suffixe = Date.now().toString(36);
 const crees: string[] = [];
 
-async function creer(role: string, status = 'approved') {
+type Compte = { id: string; email: string };
+
+async function creer(role: string, status = 'approved'): Promise<Compte> {
   const email = `${role}-${suffixe}-${crees.length}@test.local`;
   const { data, error } = await admin.auth.admin.createUser({
     email,
@@ -41,108 +43,204 @@ async function connecte(email: string): Promise<SupabaseClient> {
   return c;
 }
 
+const ok = (data: unknown) => (data as { ok: boolean }).ok;
+
 describe('flux de vente, sessions réelles', () => {
-  let client: { id: string; email: string };
-  let livreur: { id: string; email: string };
-  let autreLivreur: { id: string; email: string };
-  let cSession: SupabaseClient;
-  let lSession: SupabaseClient;
-  let mSession: SupabaseClient;
-  let commandeId: string;
-  let codeLivraison: string;
-  let codeLivreur: string;
+  let client: Compte;
+  let managerS: SupabaseClient;
+  let clientS: SupabaseClient;
 
   beforeAll(async () => {
     client = await creer('client');
-    livreur = await creer('livreur');
-    autreLivreur = await creer('livreur');
     const manager = await creer('manager');
-
-    cSession = await connecte(client.email);
-    lSession = await connecte(livreur.email);
-    mSession = await connecte(manager.email);
-
-    const { data, error } = await admin
-      .from('orders')
-      .insert({ client_id: client.id, statut: 'payée', total: 1000 })
-      .select('id')
-      .single();
-    if (error) throw error;
-    commandeId = data.id;
-
-    const { data: p } = await admin.from('profiles').select('code_livreur').eq('id', livreur.id).single();
-    codeLivreur = p!.code_livreur!;
+    clientS = await connecte(client.email);
+    managerS = await connecte(manager.email);
   });
 
   afterAll(async () => {
     for (const id of crees) await admin.auth.admin.deleteUser(id);
   });
 
+  async function nouvelleCommande(total = 1000): Promise<string> {
+    const { data, error } = await admin
+      .from('orders')
+      .insert({ client_id: client.id, statut: 'payée', total })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data.id;
+  }
+
+  // Désignée, code envoyé, validé, acceptée et démarrée
+  async function commandeExpediee(total = 1000) {
+    const id = await nouvelleCommande(total);
+    const livreur = await creer('livreur');
+    const livreurS = await connecte(livreur.email);
+
+    const d = await managerS.rpc('designer_livreur', { p_order: id, p_livreur: livreur.id });
+    if (d.error) throw d.error;
+    const code = d.data as string;
+
+    const envoi = await managerS.rpc('marquer_code_envoye', { p_order: id });
+    if (envoi.error) throw envoi.error;
+
+    const recu = await livreurS.rpc('valider_code_reception', { p_order: id, p_code: code });
+    if (!ok(recu.data)) throw new Error((recu.data as { message: string }).message);
+
+    const acc = await livreurS.rpc('accepter_livraison', { p_order: id });
+    if (acc.error) throw acc.error;
+
+    const dem = await livreurS.rpc('demarrer_livraison', { p_order: id });
+    if (dem.error) throw dem.error;
+
+    return { id, code, livreur, livreurS };
+  }
+
+  // Expédiée, puis remise confirmée par le client
+  async function commandeLivree(total = 1000) {
+    const c = await commandeExpediee(total);
+    const r = await clientS.rpc('confirmer_livraison', { p_order: c.id, p_code: c.code });
+    if (!ok(r.data)) throw new Error((r.data as { message: string }).message);
+    return c;
+  }
+
   it('le client ne peut pas modifier le statut de sa commande', async () => {
-    const { data, error } = await cSession
-      .from('orders').update({ statut: 'annulée' }).eq('id', commandeId).select();
+    const id = await nouvelleCommande();
+    const { data, error } = await clientS.from('orders').update({ statut: 'annulée' }).eq('id', id).select();
     expect(error ? [] : (data ?? [])).toHaveLength(0);
   });
 
   it('un livreur non approuvé ne peut pas être désigné', async () => {
+    const id = await nouvelleCommande();
     const pending = await creer('livreur', 'pending');
-    const { error } = await mSession.rpc('designer_livreur', {
-      p_order: commandeId, p_livreur: pending.id,
-    });
+    const { error } = await managerS.rpc('designer_livreur', { p_order: id, p_livreur: pending.id });
     expect(error).not.toBeNull();
   });
 
-  it('désignation, code, envoi et expédition', async () => {
-    let r = await mSession.rpc('designer_livreur', { p_order: commandeId, p_livreur: livreur.id });
-    expect(r.error).toBeNull();
+  it('seul le livreur assigné voit la commande en cours', async () => {
+    const c = await commandeExpediee();
+    const autre = await creer('livreur');
+    const autreS = await connecte(autre.email);
 
-    r = await mSession.rpc('generer_code_livraison', { p_order: commandeId });
-    expect(r.error).toBeNull();
-    codeLivraison = r.data as string;
-    expect(codeLivraison).toMatch(/^\d{6}$/);
+    const { data: vuAutre } = await autreS.from('orders').select('id').eq('id', c.id);
+    expect(vuAutre ?? []).toHaveLength(0);
 
-    expect((await mSession.rpc('marquer_code_envoye', { p_order: commandeId })).error).toBeNull();
-    expect((await mSession.rpc('expedier_commande', {
-      p_order: commandeId, p_livreur: livreur.id,
-    })).error).toBeNull();
+    const { data: vuAssigne } = await c.livreurS.from('orders').select('id').eq('id', c.id);
+    expect(vuAssigne ?? []).toHaveLength(1);
   });
 
-  it('seul le livreur assigné voit la commande', async () => {
-    const autre = await connecte(autreLivreur.email);
-    const { data: vu } = await autre.from('orders').select('id').eq('id', commandeId);
-    expect(vu ?? []).toHaveLength(0);
+  it('désignation, code, réception, acceptation, démarrage : chaque étape réussit', async () => {
+    const id = await nouvelleCommande();
+    const livreur = await creer('livreur');
+    const livreurS = await connecte(livreur.email);
 
-    const { data: assigne } = await lSession.from('orders').select('id').eq('id', commandeId);
-    expect(assigne).toHaveLength(1);
+    const d = await managerS.rpc('designer_livreur', { p_order: id, p_livreur: livreur.id });
+    expect(d.error, d.error?.message).toBeNull();
+    const code = d.data as string;
+    expect(code).toMatch(/^\d{6}$/);
+
+    const envoi = await managerS.rpc('marquer_code_envoye', { p_order: id });
+    expect(envoi.error, envoi.error?.message).toBeNull();
+
+    const recu = await livreurS.rpc('valider_code_reception', { p_order: id, p_code: code });
+    expect(ok(recu.data), (recu.data as { message: string }).message).toBe(true);
+
+    const acc = await livreurS.rpc('accepter_livraison', { p_order: id });
+    expect(acc.error, acc.error?.message).toBeNull();
+
+    const dem = await livreurS.rpc('demarrer_livraison', { p_order: id });
+    expect(dem.error, dem.error?.message).toBeNull();
   });
 
-  it('la remise : mauvais code refusé, bon code accepté', async () => {
-    const mauvais = await cSession.rpc('confirmer_livraison', { p_order: commandeId, p_code: '999999' });
-    expect((mauvais.data as { ok: boolean }).ok).toBe(codeLivraison === '999999');
-
-    const bon = await cSession.rpc('confirmer_livraison', { p_order: commandeId, p_code: codeLivraison });
-    expect((bon.data as { ok: boolean }).ok).toBe(true);
+  it('le manager ne peut pas poser la vente à la main', async () => {
+    const c = await commandeExpediee();
+    const { error } = await managerS.from('orders').update({ statut: 'confirmée' }).eq('id', c.id);
+    expect(error).not.toBeNull();
   });
 
-  it('l’encaissement : montant faux refusé, bon montant confirme la vente', async () => {
-    let e = await mSession.rpc('enregistrer_encaissement', {
-      p_order: commandeId, p_code_livreur: codeLivreur, p_montant: 999,
-    });
-    expect(e.error?.message).toMatch(/Montant incorrect/);
+  it('remise : mauvais code refusé, bon code accepté', async () => {
+    const c = await commandeExpediee();
+    const faux = c.code === '000000' ? '111111' : '000000';
 
-    e = await mSession.rpc('enregistrer_encaissement', {
-      p_order: commandeId, p_code_livreur: codeLivreur, p_montant: 1000,
-    });
-    expect(e.error).toBeNull();
+    const mauvais = await clientS.rpc('confirmer_livraison', { p_order: c.id, p_code: faux });
+    expect(ok(mauvais.data)).toBe(false);
 
-    const { data } = await admin.from('orders')
-      .select('statut, vente_confirmee_at').eq('id', commandeId).single();
+    const bon = await clientS.rpc('confirmer_livraison', { p_order: c.id, p_code: c.code });
+    expect(ok(bon.data), (bon.data as { message: string }).message).toBe(true);
+  });
+
+  it('vente : montant déclaré par le livreur, puis confirmation du manager', async () => {
+    const total = 1000;
+    const c = await commandeLivree(total);
+
+    const faux = await c.livreurS.rpc('declarer_remise', { p_order: c.id, p_montant: total - 1 });
+    expect(faux.error).not.toBeNull();
+
+    const juste = await c.livreurS.rpc('declarer_remise', { p_order: c.id, p_montant: total });
+    expect(juste.error, juste.error?.message).toBeNull();
+
+    const conf = await managerS.rpc('confirmer_vente', { p_order: c.id });
+    expect(conf.error, conf.error?.message).toBeNull();
+
+    const { data } = await admin
+      .from('orders')
+      .select('statut, vente_confirmee_at, terminee_at')
+      .eq('id', c.id)
+      .single();
     expect(data!.statut).toBe('confirmée');
     expect(data!.vente_confirmee_at).not.toBeNull();
+    expect(data!.terminee_at).not.toBeNull();
+  });
+
+  it('refus puis désignation d’un autre livreur, historique tracé', async () => {
+    const id = await nouvelleCommande();
+    const a = await creer('livreur');
+    const b = await creer('livreur');
+    const aS = await connecte(a.email);
+
+    expect((await managerS.rpc('designer_livreur', { p_order: id, p_livreur: a.id })).error).toBeNull();
+    expect((await aS.rpc('refuser_livraison', { p_order: id, p_motif: 'Indisponible ce jour' })).error).toBeNull();
+
+    const r = await managerS.rpc('designer_livreur', { p_order: id, p_livreur: b.id });
+    expect(r.error, r.error?.message).toBeNull();
+    expect(typeof r.data).toBe('string');
+
+    const { data: hist } = await admin.from('livraisons_historique').select('evenement').eq('order_id', id);
+    expect((hist ?? []).map((h) => h.evenement)).toEqual(expect.arrayContaining(['designe', 'refuse']));
+  });
+
+  it('réassignation : bloquée avant 1 h, possible après, ancien livreur exclu', async () => {
+    const id = await nouvelleCommande();
+    const a = await creer('livreur');
+    const b = await creer('livreur');
+    const c = await creer('livreur');
+    const aS = await connecte(a.email);
+    const cS = await connecte(c.email);
+
+    expect((await managerS.rpc('designer_livreur', { p_order: id, p_livreur: a.id })).error).toBeNull();
+
+    const trop = await managerS.rpc('reassigner_livreur', { p_order: id, p_nouveau: b.id, p_motif: 'Test délai' });
+    expect(trop.error?.message).toMatch(/une heure/);
+
+    // Service role : simule deux heures écoulées, le trigger ne s'applique pas
+    await admin
+      .from('orders')
+      .update({ designe_at: new Date(Date.now() - 2 * 3600_000).toISOString() })
+      .eq('id', id);
+
+    const reas = await managerS.rpc('reassigner_livreur', { p_order: id, p_nouveau: c.id, p_motif: 'Pas de réponse' });
+    expect(reas.error, reas.error?.message).toBeNull();
+    const nouveauCode = reas.data as string;
+
+    const ancien = await aS.rpc('valider_code_reception', { p_order: id, p_code: nouveauCode });
+    expect(ok(ancien.data)).toBe(false);
+
+    const nouveau = await cS.rpc('valider_code_reception', { p_order: id, p_code: nouveauCode });
+    expect(ok(nouveau.data)).toBe(true);
   });
 
   it('un client ne peut pas lister les livreurs', async () => {
-    const { error } = await cSession.rpc('liste_livreurs');
+    const { error } = await clientS.rpc('liste_livreurs');
     expect(error).not.toBeNull();
   });
 
@@ -151,4 +249,31 @@ describe('flux de vente, sessions réelles', () => {
     const { error } = await anon.rpc('generer_codes_promo');
     expect(error).not.toBeNull();
   });
+
+  it('le livreur voit sa livraison dès la désignation, les autres non', async () => {
+  const id = await nouvelleCommande();
+  const assigne = await creer('livreur');
+  const autre = await creer('livreur');
+  const assigneS = await connecte(assigne.email);
+  const autreS = await connecte(autre.email);
+
+  expect((await managerS.rpc('designer_livreur', { p_order: id, p_livreur: assigne.id })).error).toBeNull();
+
+  const { data: vuAssigne } = await assigneS.from('orders').select('id, statut').eq('id', id);
+  expect(vuAssigne ?? []).toHaveLength(1);
+
+  const { data: vuAutre } = await autreS.from('orders').select('id').eq('id', id);
+  expect(vuAutre ?? []).toHaveLength(0);
+});
+
+it('historique livreur : seulement ses livraisons', async () => {
+  const a = await creer('livreur');
+  const aS = await connecte(a.email);
+  const { error } = await aS.rpc('historique_livreur', { p_periode: 'mois' });
+  expect(error).toBeNull();
+
+  const { error: refus } = await clientS.rpc('historique_livreur', { p_periode: 'mois' });
+  expect(refus).not.toBeNull();
+});
+
 });

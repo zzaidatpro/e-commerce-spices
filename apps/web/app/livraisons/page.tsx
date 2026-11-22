@@ -1,26 +1,36 @@
 import { redirect } from 'next/navigation';
-import { Phone, MapPin, Wallet, Truck } from 'lucide-react';
+import Link from 'next/link';
+import { Truck } from 'lucide-react';
 import { createClient } from '@repo/database/server';
 import { CoordonneesLivreurForm } from '@/components/molecules/CoordonneesLivreurForm';
+import { LivraisonCard, type Livraison } from '@/components/molecules/LivraisonCard';
 
-type Adresse = { adresse_complete: string; type_lieu: string; url_google_maps: string | null };
-type Ligne = { quantite: number; produits: { nom: string } | { nom: string }[] | null };
-type Commande = {
-  id: string;
-  total: number | string;
-  expediee_at: string | null;
-  adresses_livraison: Adresse | Adresse[] | null;
-  order_items: Ligne[];
+type Periode = 'jour' | 'semaine' | 'mois';
+type Contact = { nom: string | null; prenom: string | null; telephone: string | null } | null;
+type LigneHistorique = {
+  periode_debut: string;
+  nb_livraisons: number;
+  montant_total: number | string;
+  nb_confirmees: number;
+  nb_refusees: number;
 };
-type Contact = { nom: string | null; prenom: string | null; telephone: string | null };
 
-const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
-const nomProduit = (p: Ligne['produits']) => (Array.isArray(p) ? p[0]?.nom : p?.nom) ?? 'Produit';
+const PERIODES: Periode[] = ['jour', 'semaine', 'mois'];
+const LIBELLE: Record<Periode, string> = { jour: 'Jour', semaine: 'Semaine', mois: 'Mois' };
 
-export default async function LivraisonsPage() {
+export default async function LivraisonsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periode?: string }>;
+}) {
+  const { periode } = await searchParams;
+  const p: Periode = PERIODES.includes(periode as Periode) ? (periode as Periode) : 'mois';
+
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect('/');
 
   const { data: moi } = await supabase
@@ -31,23 +41,32 @@ export default async function LivraisonsPage() {
 
   if (moi?.role !== 'livreur') redirect('/unauthorized');
 
+  const { data: historiqueBrut } = await supabase.rpc('historique_livreur', { p_periode: p });
+  const historique = (historiqueBrut ?? []) as LigneHistorique[];
+  const totalMontant = historique.reduce((s, l) => s + Number(l.montant_total), 0);
+
   const { data, error } = await supabase
     .from('orders')
-    .select(
-      'id, total, expediee_at, adresses_livraison:adresse_liv_id (adresse_complete, type_lieu, url_google_maps), order_items (quantite, produits (nom))'
-    )
+    .select(`
+      id, total, statut, code_recu_at, acceptee_at, expediee_at, montant_declare, remise_at,
+      adresses_livraison:adresse_liv_id (adresse_complete, type_lieu, url_google_maps),
+      order_items (id, quantite, produits (nom))
+    `)
     .eq('livreur_id', user.id)
-    .eq('statut', 'expédiée')
-    .order('expediee_at', { ascending: true });
+    .in('statut', ['payée', 'en_attente', 'expédiée', 'livrée'])
+    .order('created_at', { ascending: true });
 
   if (error) {
     return <p className="p-6 text-xs text-destructive">Erreur : {error.message}</p>;
   }
 
-  const commandes = (data ?? []) as Commande[];
+  const livraisons = (data ?? []) as unknown as Livraison[];
 
+  // Coordonnées du client : seulement pendant la livraison en cours
   const contacts = await Promise.all(
-    commandes.map((c) => supabase.rpc('contact_livraison', { p_order: c.id }))
+    livraisons.map((l) =>
+      l.statut === 'expédiée' ? supabase.rpc('contact_livraison', { p_order: l.id }) : null
+    )
   );
 
   return (
@@ -56,93 +75,103 @@ export default async function LivraisonsPage() {
         <p className="text-xs text-muted-foreground">
           {moi?.prenom} {moi?.nom}
         </p>
-        <p className="text-xs text-muted-foreground">Votre code livreur (à donner au manager à la remise de l'argent)</p>
-        <p className="text-3xl font-mono font-bold tracking-widest text-foreground">{moi?.code_livreur ?? '—'}</p>
+        <p className="text-xs text-muted-foreground">Votre code livreur</p>
+        <p className="text-3xl font-mono font-bold tracking-widest text-foreground">
+          {moi?.code_livreur ?? '—'}
+        </p>
       </div>
+
+      <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-foreground">Historique</h2>
+          <div className="flex gap-2 text-xs">
+            {PERIODES.map((x) => (
+              <Link
+                key={x}
+                href={`/livraisons?periode=${x}`}
+                className={`px-3 py-1.5 rounded-lg border ${
+                  p === x
+                    ? 'bg-shop-orange text-white border-shop-orange'
+                    : 'border-border text-muted-foreground'
+                }`}
+              >
+                {LIBELLE[x]}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Total déclaré :{' '}
+          <span className="font-semibold text-foreground">
+            {totalMontant.toLocaleString('fr-FR')} DA
+          </span>
+        </p>
+
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border text-muted-foreground font-semibold">
+              <th className="py-2">Période</th>
+              <th className="py-2">Livraisons</th>
+              <th className="py-2">Confirmées</th>
+              <th className="py-2">Refusées</th>
+              <th className="py-2 text-right">Montant</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {historique.length > 0 ? (
+              historique.map((l) => (
+                <tr key={l.periode_debut}>
+                  <td className="py-2">
+                    {new Date(`${l.periode_debut}T12:00:00Z`).toLocaleDateString('fr-FR', {
+                      day: p === 'mois' ? undefined : 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      timeZone: 'Africa/Algiers',
+                    })}
+                  </td>
+                  <td className="py-2">{l.nb_livraisons}</td>
+                  <td className="py-2">{l.nb_confirmees}</td>
+                  <td className="py-2">{l.nb_refusees}</td>
+                  <td className="py-2 text-right font-semibold">
+                    {Number(l.montant_total).toLocaleString('fr-FR')} DA
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                  Aucune livraison sur cette période.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      <CoordonneesLivreurForm
+        nom={moi?.nom ?? null}
+        prenom={moi?.prenom ?? null}
+        telephone={moi?.telephone ?? null}
+        whatsapp={moi?.whatsapp ?? null}
+      />
+
       <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
         <Truck className="w-5 h-5 text-shop-orange" />
-        Mes livraisons en cours ({commandes.length})
+        Mes livraisons en cours ({livraisons.length})
       </h1>
 
-      {commandes.length === 0 && (
+      {livraisons.length === 0 && (
         <p className="text-xs text-muted-foreground">Aucune livraison en cours.</p>
       )}
 
-      {commandes.map((c, i) => {
-        const adresse = Array.isArray(c.adresses_livraison) ? c.adresses_livraison[0] : c.adresses_livraison;
-        const contact = (contacts[i]?.data?.[0] ?? null) as Contact | null;
-        const tel = contact?.telephone ?? null;
-
-        return (
-          <article key={c.id} className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="font-mono font-semibold text-foreground">#{c.id.slice(0, 8)}</span>
-              <span className="text-muted-foreground">
-                {c.expediee_at ? new Date(c.expediee_at).toLocaleString('fr-FR') : ''}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="flex items-center gap-2 font-semibold text-foreground">
-                <MapPin className="w-4 h-4 text-shop-orange" />
-                {adresse?.adresse_complete ?? 'Adresse non renseignée'}
-              </p>
-              {adresse?.type_lieu && <p className="text-muted-foreground capitalize">Lieu : {adresse.type_lieu}</p>}
-              {adresse?.url_google_maps && (
-                <a href={adresse.url_google_maps} target="_blank" rel="noopener noreferrer" className="text-shop-orange hover:underline">
-                  Ouvrir dans Google Maps
-                </a>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="font-semibold text-foreground">
-                {contact ? `${contact.prenom ?? ''} ${contact.nom ?? ''}`.trim() : 'Client'}
-              </p>
-              {tel && (
-                <a href={`tel:${tel}`} className="flex items-center gap-2 text-shop-orange hover:underline">
-                  <Phone className="w-4 h-4" />
-                  {tel}
-                </a>
-              )}
-            </div>
-
-            <ul className="divide-y divide-border">
-              {c.order_items.map((l, j) => (
-                <li key={j} className="py-2 flex justify-between">
-                  <span>
-                    {nomProduit(l.produits)} × {l.quantite}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex items-center justify-between pt-3 border-t border-border">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Wallet className="w-4 h-4" />
-                À remettre au manager après encaissement
-              </span>
-              <span className="font-bold text-shop-orange">{euros(Number(c.total))}</span>
-            </div>
-
-            <p className="text-[11px] text-muted-foreground">
-              Remettez le code de livraison (reçu par WhatsApp) au client. C'est lui qui le saisit sur son espace
-              pour confirmer la remise.
-            </p>
-          </article>
-          
-        );
-      })}
-      <div>
-        <CoordonneesLivreurForm
-            nom={moi?.nom ?? null}
-            prenom={moi?.prenom ?? null}
-            telephone={moi?.telephone ?? null}
-            whatsapp={moi?.whatsapp ?? null}
+      {livraisons.map((l, i) => (
+        <LivraisonCard
+          key={l.id}
+          livraison={l}
+          contact={(contacts[i]?.data?.[0] ?? null) as Contact}
         />
-      </div>
+      ))}
     </div>
-    
   );
-  
 }

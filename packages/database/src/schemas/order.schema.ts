@@ -5,6 +5,7 @@ export const statutCommandeSchema = z.enum(Constants.public.Enums.statut_command
 
 const uuidNullable = z.string().uuid().nullable();
 const dateNullable = z.string().nullable();
+const montantNullable = z.number().nonnegative().nullable();
 
 // orders
 export const orderSchema = z.object({
@@ -14,15 +15,25 @@ export const orderSchema = z.object({
   statut: statutCommandeSchema,
   total: z.number(),
   remise: z.number().nonnegative(),
-  remise_at: dateNullable,
-  expediee_at: dateNullable,
+  created_at: z.string(),
+
   livreur_id: uuidNullable,
-  encaissement_montant: z.number().nullable(),
+  designe_at: dateNullable,
+  code_envoye_at: dateNullable,
+  code_recu_at: dateNullable,
+  acceptee_at: dateNullable,
+  expediee_at: dateNullable,
+  demarree_at: dateNullable,
+  remise_at: dateNullable,
+  montant_declare: montantNullable,
+  montant_declare_at: dateNullable,
+
+  encaissement_montant: montantNullable,
   encaissement_livreur_id: uuidNullable,
   encaissement_par: uuidNullable,
   encaissement_at: dateNullable,
   vente_confirmee_at: dateNullable,
-  created_at: z.string(),
+  terminee_at: dateNullable,
 }) satisfies z.ZodType<Tables<'orders'>>;
 
 export const orderInsertSchema = z.object({
@@ -32,62 +43,75 @@ export const orderInsertSchema = z.object({
   statut: statutCommandeSchema.optional(),
   total: z.number().optional(),
   remise: z.number().nonnegative().optional(),
-  remise_at: dateNullable.optional(),
-  expediee_at: dateNullable.optional(),
+  created_at: z.string().optional(),
   livreur_id: uuidNullable.optional(),
-  encaissement_montant: z.number().nullable().optional(),
+  designe_at: dateNullable.optional(),
+  code_envoye_at: dateNullable.optional(),
+  code_recu_at: dateNullable.optional(),
+  acceptee_at: dateNullable.optional(),
+  expediee_at: dateNullable.optional(),
+  demarree_at: dateNullable.optional(),
+  remise_at: dateNullable.optional(),
+  montant_declare: montantNullable.optional(),
+  montant_declare_at: dateNullable.optional(),
+  encaissement_montant: montantNullable.optional(),
   encaissement_livreur_id: uuidNullable.optional(),
   encaissement_par: uuidNullable.optional(),
   encaissement_at: dateNullable.optional(),
   vente_confirmee_at: dateNullable.optional(),
-  created_at: z.string().optional(),
+  terminee_at: dateNullable.optional(),
 }) satisfies z.ZodType<TablesInsert<'orders'>>;
 
 export const orderUpdateSchema = z.object({
-  id: z.string().uuid().optional(),
   client_id: uuidNullable.optional(),
   adresse_liv_id: uuidNullable.optional(),
   statut: statutCommandeSchema.optional(),
   total: z.number().optional(),
   remise: z.number().nonnegative().optional(),
-  remise_at: dateNullable.optional(),
-  expediee_at: dateNullable.optional(),
   livreur_id: uuidNullable.optional(),
-  encaissement_montant: z.number().nullable().optional(),
+  designe_at: dateNullable.optional(),
+  code_envoye_at: dateNullable.optional(),
+  code_recu_at: dateNullable.optional(),
+  acceptee_at: dateNullable.optional(),
+  expediee_at: dateNullable.optional(),
+  demarree_at: dateNullable.optional(),
+  remise_at: dateNullable.optional(),
+  montant_declare: montantNullable.optional(),
+  montant_declare_at: dateNullable.optional(),
+  encaissement_montant: montantNullable.optional(),
   encaissement_livreur_id: uuidNullable.optional(),
   encaissement_par: uuidNullable.optional(),
   encaissement_at: dateNullable.optional(),
   vente_confirmee_at: dateNullable.optional(),
-  created_at: z.string().optional(),
+  terminee_at: dateNullable.optional(),
 }) satisfies z.ZodType<TablesUpdate<'orders'>>;
 
-// Champs qu'un membre du staff peut modifier directement.
-// Le reste (remise, livreur, encaissement, dates de flux) passe par les fonctions dédiées.
+// Ce que le staff peut modifier directement : statut libre, uniquement en amont
 export const orderStaffUpdateSchema = z.object({
   statut: z.enum(['en_attente', 'payée', 'annulée']).optional(),
 });
 
-// orders items
+// order_items
 export const orderItemSchema = z.object({
   id: z.string().uuid(),
   order_id: z.string().uuid(),
-  produit_id: z.string().uuid().nullable(),
-  quantite: z.number(),
-  prix_facture: z.number(),
+  produit_id: uuidNullable,
+  quantite: z.number().int().positive(),
+  prix_facture: z.number().nonnegative(),
 }) satisfies z.ZodType<Tables<'order_items'>>;
 
 export const orderItemInsertSchema = z.object({
   id: z.string().uuid().optional(),
   order_id: z.string().uuid(),
-  produit_id: z.string().uuid().nullable().optional(),
-  quantite: z.number(),
-  prix_facture: z.number(),
+  produit_id: uuidNullable.optional(),
+  quantite: z.number().int().positive(),
+  prix_facture: z.number().nonnegative(),
 }) satisfies z.ZodType<TablesInsert<'order_items'>>;
 
 export const orderItemUpdateSchema = z.object({
   id: z.string().uuid().optional(),
   order_id: z.string().uuid().optional(),
-  produit_id: z.string().uuid().nullable().optional(),
-  quantite: z.number().optional(),
-  prix_facture: z.number().optional(),
+  produit_id: uuidNullable.optional(),
+  quantite: z.number().int().positive().optional(),
+  prix_facture: z.number().nonnegative().optional(),
 }) satisfies z.ZodType<TablesUpdate<'order_items'>>;

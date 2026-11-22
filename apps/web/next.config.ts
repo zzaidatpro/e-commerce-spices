@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
+import path from 'node:path';
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@repo/auth", "@repo/database", "@repo/lib", "@repo/ui"],
-  turbopack: { root: "../.." },
+  turbopack: { root: path.resolve(process.cwd(), '../..'),},
   images: {
     remotePatterns: [
       {

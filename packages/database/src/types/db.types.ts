@@ -214,6 +214,59 @@ export type Database = {
           },
         ];
       };
+      livraisons_historique: {
+        Row: {
+          at: string;
+          auteur: string | null;
+          detail: string | null;
+          evenement: string;
+          id: string;
+          livreur_id: string | null;
+          order_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          at?: string;
+          auteur?: string | null;
+          detail?: string | null;
+          evenement: string;
+          id?: string;
+          livreur_id?: string | null;
+          order_id: string;
+        };
+        Update: {
+          at?: string;
+          auteur?: string | null;
+          detail?: string | null;
+          evenement?: string;
+          id?: string;
+          livreur_id?: string | null;
+          order_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'livraisons_historique_auteur_fkey';
+            columns: ['auteur'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'livraisons_historique_livreur_id_fkey';
+            columns: ['livreur_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'livraisons_historique_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       order_items: {
         Row: {
           id: string;
@@ -256,9 +309,13 @@ export type Database = {
       };
       orders: {
         Row: {
+          acceptee_at: string | null;
           adresse_liv_id: string | null;
           client_id: string | null;
+          code_envoye_at: string | null;
+          code_recu_at: string | null;
           created_at: string;
+          designe_at: string | null;
           encaissement_at: string | null;
           encaissement_livreur_id: string | null;
           encaissement_montant: number | null;
@@ -266,17 +323,24 @@ export type Database = {
           expediee_at: string | null;
           id: string;
           livreur_id: string | null;
+          montant_declare: number | null;
+          montant_declare_at: string | null;
           remise: number;
           remise_at: string | null;
           statut: Database['public']['Enums']['statut_commande'];
+          terminee_at: string | null;
           total: number;
           vente_confirmee_at: string | null;
         };
         ComputedFields: never;
         Insert: {
+          acceptee_at?: string | null;
           adresse_liv_id?: string | null;
           client_id?: string | null;
+          code_envoye_at?: string | null;
+          code_recu_at?: string | null;
           created_at?: string;
+          designe_at?: string | null;
           encaissement_at?: string | null;
           encaissement_livreur_id?: string | null;
           encaissement_montant?: number | null;
@@ -284,16 +348,23 @@ export type Database = {
           expediee_at?: string | null;
           id?: string;
           livreur_id?: string | null;
+          montant_declare?: number | null;
+          montant_declare_at?: string | null;
           remise?: number;
           remise_at?: string | null;
           statut?: Database['public']['Enums']['statut_commande'];
+          terminee_at?: string | null;
           total?: number;
           vente_confirmee_at?: string | null;
         };
         Update: {
+          acceptee_at?: string | null;
           adresse_liv_id?: string | null;
           client_id?: string | null;
+          code_envoye_at?: string | null;
+          code_recu_at?: string | null;
           created_at?: string;
+          designe_at?: string | null;
           encaissement_at?: string | null;
           encaissement_livreur_id?: string | null;
           encaissement_montant?: number | null;
@@ -301,9 +372,12 @@ export type Database = {
           expediee_at?: string | null;
           id?: string;
           livreur_id?: string | null;
+          montant_declare?: number | null;
+          montant_declare_at?: string | null;
           remise?: number;
           remise_at?: string | null;
           statut?: Database['public']['Enums']['statut_commande'];
+          terminee_at?: string | null;
           total?: number;
           vente_confirmee_at?: string | null;
         };
@@ -723,6 +797,7 @@ export type Database = {
     };
     Functions: {
       a_achete_produit: { Args: { p_produit_id: string }; Returns: boolean };
+      accepter_livraison: { Args: { p_order: string }; Returns: undefined };
       classement_favoris: {
         Args: { p_limit?: number };
         Returns: {
@@ -760,6 +835,7 @@ export type Database = {
         }[];
       };
       confirmer_livraison: { Args: { p_code: string; p_order: string }; Returns: Json };
+      confirmer_vente: { Args: { p_order: string }; Returns: undefined };
       contact_client_commande: {
         Args: { p_order: string };
         Returns: {
@@ -780,13 +856,11 @@ export type Database = {
         Returns: string;
       };
       decider_retour: { Args: { p_accepte: boolean; p_retour: string }; Returns: undefined };
+      declarer_remise: { Args: { p_montant: number; p_order: string }; Returns: undefined };
       demander_nouveau_code: { Args: { p_order: string }; Returns: Json };
       demander_retour: { Args: { p_motif: string; p_order: string }; Returns: string };
-      designer_livreur: { Args: { p_livreur: string; p_order: string }; Returns: undefined };
-      enregistrer_encaissement: {
-        Args: { p_code_livreur: string; p_montant: number; p_order: string };
-        Returns: undefined;
-      };
+      demarrer_livraison: { Args: { p_order: string }; Returns: undefined };
+      designer_livreur: { Args: { p_livreur: string; p_order: string }; Returns: string };
       est_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       est_livreur: { Args: Record<PropertyKey, never>; Returns: boolean };
       est_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -798,11 +872,14 @@ export type Database = {
           expires_at: string;
         }[];
       };
-      expedier_commande: { Args: { p_livreur: string; p_order: string }; Returns: undefined };
       generer_code_livraison: { Args: { p_order: string }; Returns: string };
       generer_code_livreur: { Args: Record<PropertyKey, never>; Returns: string };
       generer_codes_promo: { Args: Record<PropertyKey, never>; Returns: number };
       is_admin_or_livreur: { Args: { allowed_roles: string[] }; Returns: boolean };
+      journaliser_livraison: {
+        Args: { p_detail?: string; p_evenement: string; p_livreur: string; p_order: string };
+        Returns: undefined;
+      };
       liste_clients: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -843,12 +920,19 @@ export type Database = {
       };
       mon_role: { Args: Record<PropertyKey, never>; Returns: string };
       mon_statut: { Args: Record<PropertyKey, never>; Returns: string };
+      nouveau_code_livraison: { Args: { p_order: string }; Returns: string };
       peut_generer_promo: { Args: Record<PropertyKey, never>; Returns: boolean };
+      reassigner_livreur: {
+        Args: { p_motif: string; p_nouveau: string; p_order: string };
+        Returns: string;
+      };
+      refuser_livraison: { Args: { p_motif: string; p_order: string }; Returns: undefined };
       rembourser_retour: {
         Args: { p_montant: number; p_reference: string; p_retour: string; p_stock_remis: boolean };
         Returns: undefined;
       };
       tableau_de_bord: { Args: Record<PropertyKey, never>; Returns: Json };
+      valider_code_reception: { Args: { p_code: string; p_order: string }; Returns: Json };
       valider_et_payer_commande: { Args: { p_order_id: string }; Returns: undefined };
       ventes_par_jour: {
         Args: { p_mois?: string };
@@ -867,7 +951,8 @@ export type Database = {
         | 'livr├⌐e'
         | 'annul├⌐e'
         | 'confirm├⌐e'
-        | 'rembours├⌐e';
+        | 'rembours├⌐e'
+        | 'termin├⌐e';
       statut_profil: 'pending' | 'approved' | 'blocked';
       type_emplacement: 'maison' | 'magasin' | 'depot';
       type_role: 'client' | 'admin' | 'livreur' | 'manager';
@@ -994,6 +1079,7 @@ export const Constants = {
         'annul├⌐e',
         'confirm├⌐e',
         'rembours├⌐e',
+        'termin├⌐e',
       ],
       statut_profil: ['pending', 'approved', 'blocked'],
       type_emplacement: ['maison', 'magasin', 'depot'],

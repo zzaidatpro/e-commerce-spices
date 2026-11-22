@@ -44,19 +44,38 @@ export async function encaisserAction(orderId: string, formData: FormData): Prom
   return { success: true };
 }
 
-export async function assignerLivreurAction(orderId: string, livreurId: string): Promise<ResultatAction> {
+export async function assignerLivreurAction(orderId: string, livreurId: string): Promise<ResultatAction & {code?: string}> {
   const auth = await requireRole(['admin', 'manager']).catch(() => null);
   if (!auth) return { error: 'Accès refusé.' };
   if (!livreurId) return { error: 'Choisissez un livreur.' };
 
-  const { error } = await auth.supabase.rpc('designer_livreur', {
+  const { data, error } = await auth.supabase.rpc('designer_livreur', {
     p_order: orderId,
     p_livreur: livreurId,
   });
   if (error) return { error: error.message };
 
   revalidatePath(`/admin/orders/${orderId}`);
-  return { success: true };
+  return { success: true, code: String(data) };
+}
+
+export async function reassignerLivreurAction(
+  orderId: string,
+  livreurId: string,
+  motif: string
+): Promise<ResultatAction & { code?: string }> {
+  const auth = await requireRole(['admin', 'manager']).catch(() => null);
+  if (!auth) return { error: 'Accès refusé.' };
+
+  const { data, error } = await auth.supabase.rpc('reassigner_livreur', {
+    p_order: orderId,
+    p_nouveau: livreurId,
+    p_motif: motif,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { success: true, code: String(data) };
 }
 
 export async function marquerCodeEnvoyeAction(orderId: string): Promise<ResultatAction> {
@@ -67,5 +86,17 @@ export async function marquerCodeEnvoyeAction(orderId: string): Promise<Resultat
   if (error) return { error: error.message };
 
   revalidatePath(`/admin/orders/${orderId}`);
+  return { success: true };
+}
+
+export async function confirmerVenteAction(orderId: string): Promise<ResultatAction> {
+  const auth = await requireRole(['admin', 'manager']).catch(() => null);
+  if (!auth) return { error: 'Accès refusé.' };
+
+  const { error } = await auth.supabase.rpc('confirmer_vente', { p_order: orderId });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath('/admin/orders');
   return { success: true };
 }

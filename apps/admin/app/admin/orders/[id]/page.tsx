@@ -4,11 +4,10 @@ import { requireRole } from '@/actions/helper';
 import { STATUT_LABELS } from '@/lib/commandes';
 import { versWhatsapp } from '@/lib/whatsapp';
 import { RemiseForm } from '@/components/molecules/OrderActions';
-import { EncaissementForm } from '@/components/molecules/VenteActions';
+import { ConfirmerVenteButton } from '@/components/molecules/ConfirmerVenteButton';
 import {
   LivreurForm,
   CodeLivraisonPanel,
-  ExpedierButton,
   ActionStatutButton,
   type Livreur,
   type EtatCode,
@@ -27,20 +26,36 @@ type Contact = {
   email: string | null;
   telephone: string | null;
   whatsapp: string | null;
-};
+} | null;
 
-const ETAPES = [
-  'Commande reçue',
-  'Livreur désigné',
-  'Code envoyé au livreur',
-  'En livraison',
-  'Colis remis',
-  'Vente confirmée',
-];
+type Commande = {
+  id: string;
+  created_at: string;
+  total: number | string;
+  remise: number | string;
+  statut: string;
+  adresse_liv_id: string | null;
+  livreur_id: string | null;
+  designe_at: string | null;
+  code_envoye_at: string | null;
+  code_recu_at: string | null;
+  acceptee_at: string | null;
+  expediee_at: string | null;
+  remise_at: string | null;
+  montant_declare: number | string | null;
+  vente_confirmee_at: string | null;
+  terminee_at: string | null;
+};
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
 const date = (d: string) =>
-  new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  new Date(d).toLocaleString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,16 +63,22 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const sb = auth.supabase;
   const isAdmin = auth.role === 'admin';
 
-  const { data: order, error } = await sb
+  const { data: row, error } = await sb
     .from('orders')
-    .select('id, created_at, total, remise, statut, adresse_liv_id, livreur_id, expediee_at, remise_at, vente_confirmee_at')
+    .select(`
+      id, created_at, total, remise, statut, adresse_liv_id, livreur_id,
+      designe_at, code_envoye_at, code_recu_at, acceptee_at, expediee_at,
+      remise_at, montant_declare, vente_confirmee_at, terminee_at
+    `)
     .eq('id', id)
     .maybeSingle();
 
   if (error) return <p className="text-xs text-destructive">Erreur : {error.message}</p>;
-  if (!order) notFound();
+  if (!row) notFound();
 
-  const [itemsRes, adresseRes, contactRes, livreursRes, etatRes] = await Promise.all([
+  const order = row as unknown as Commande;
+
+  const [itemsRes, adresseRes, contactRes, livreursRes, etatRes, demandesRes] = await Promise.all([
     sb.from('order_items').select('id, quantite, prix_facture, produits(nom)').eq('order_id', id),
     order.adresse_liv_id
       ? sb.from('adresses_livraison').select('adresse_complete, type_lieu').eq('id', order.adresse_liv_id).maybeSingle()
@@ -65,43 +86,46 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     sb.rpc('contact_client_commande', { p_order: id }),
     sb.rpc('liste_livreurs'),
     sb.rpc('etat_code_livraison', { p_order: id }),
+    sb.from('demandes_code').select('id, demande_at').eq('order_id', id).is('traitee_at', null),
   ]);
 
   const items = (itemsRes.data ?? []) as Ligne[];
   const adresse = adresseRes.data as { adresse_complete: string; type_lieu: string } | null;
-  const contact = (contactRes.data?.[0] ?? null) as Contact | null;
+  const contact = (contactRes.data?.[0] ?? null) as Contact;
   const livreurs = (livreursRes.data ?? []) as Livreur[];
   const etat = (etatRes.data?.[0] ?? null) as EtatCode | null;
+  const demandes = demandesRes.data ?? [];
 
-  const statut = order.statut as string;
+  const statut = order.statut;
+  const annulee = statut === 'annulée';
   const ouvert = statut === 'en_attente' || statut === 'payée';
-  const expediee = statut === 'expédiée';
+  const enCours = statut === 'expédiée';
   const livree = statut === 'livrée';
   const confirmee = statut === 'confirmée' || statut === 'remboursée';
-  const annulee = statut === 'annulée';
 
-  const codeEnvoye = !!etat?.envoye_at;
+  // Annulation : seulement avant acceptation du livreur
+  const annulable = ouvert && !order.acceptee_at;
+
   const livreur = livreurs.find((l) => l.id === order.livreur_id) ?? null;
   const reference = order.id.slice(0, 8);
   const sousTotal = items.reduce((s, i) => s + Number(i.quantite) * Number(i.prix_facture), 0);
   const nomProduit = (p: Ligne['produits']) => (Array.isArray(p) ? p[0]?.nom : p?.nom) ?? 'Produit supprimé';
   const whatsappClient = versWhatsapp(contact?.whatsapp);
 
-  const atteint = [
-    true,
-    !!order.livreur_id,
-    codeEnvoye,
-    expediee || livree || confirmee,
-    livree || confirmee,
-    confirmee,
+  const etapes = [
+    { label: 'Commande reçue', date: order.created_at },
+    { label: 'Livreur désigné', date: order.designe_at },
+    { label: 'Code envoyé', date: order.code_envoye_at },
+    { label: 'Code reçu par le livreur', date: order.code_recu_at },
+    { label: 'Livraison acceptée', date: order.acceptee_at },
+    { label: 'En livraison', date: order.expediee_at },
+    { label: 'Colis remis', date: order.remise_at },
+    { label: 'Vente confirmée', date: order.vente_confirmee_at },
+    { label: 'Opération terminée', date: order.terminee_at },
   ];
-  
-  const { data: demandes } = await sb
-  .from('demandes_code')
-  .select('id, demande_at')
-  .eq('order_id', id)
-  .is('traitee_at', null);
 
+  const montantOk =
+    order.montant_declare != null && Number(order.montant_declare) === Number(order.total);
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
@@ -124,15 +148,22 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       {!annulee && (
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] border border-border rounded-2xl bg-card p-4">
-          {ETAPES.map((label, i) => (
-            <li key={label} className="flex items-center gap-2">
+          {etapes.map((e, i) => (
+            <li key={e.label} className="flex items-center gap-2">
               {i > 0 && <span className="text-muted-foreground">•</span>}
-              <span className={atteint[i] ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
-                {label}
+              <span
+                className={e.date ? 'font-semibold text-foreground' : 'text-muted-foreground'}
+                title={e.date ? date(e.date) : 'Non atteint'}
+              >
+                {e.label}
               </span>
             </li>
           ))}
         </ol>
+      )}
+
+      {annulee && (
+        <p className="text-xs font-semibold text-red-600">Cette commande a été annulée.</p>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -178,8 +209,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <p className="text-muted-foreground">Aucune adresse liée à cette commande.</p>
             )}
 
-            {ouvert ? (
-              <LivreurForm orderId={order.id} livreurs={livreurs} livreurId={order.livreur_id} />
+            {ouvert && !order.livreur_id ? (
+              <LivreurForm orderId={order.id} livreurs={livreurs} livreurId={null} />
             ) : (
               <p>
                 Livreur :{' '}
@@ -190,39 +221,46 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             )}
           </section>
 
-          {ouvert && (
+          {demandes.length > 0 && (ouvert || enCours) && (
+            <div className="p-4 rounded-2xl border border-amber-500/40 bg-amber-500/5 text-xs flex flex-col gap-1">
+              <p className="font-semibold text-foreground">Le client demande un nouveau code de livraison.</p>
+              <p className="text-muted-foreground">
+                Demande du {date(demandes[0].demande_at)}. Régénérez le code et transmettez-le au livreur.
+              </p>
+            </div>
+          )}
+
+          {ouvert && order.livreur_id && !order.acceptee_at && (
             <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-4">
-              <h2 className="text-sm font-bold text-foreground">Code de livraison et expédition</h2>
+              <h2 className="text-sm font-bold text-foreground">Code de livraison</h2>
               <CodeLivraisonPanel orderId={order.id} reference={reference} livreur={livreur} etat={etat} />
-              <ExpedierButton
-                orderId={order.id}
-                livreurId={order.livreur_id ?? ''}
-                pret={!!order.livreur_id && codeEnvoye}
-              />
             </section>
           )}
 
-          {expediee && (
+          {enCours && (
             <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-2 text-xs">
-              <h2 className="text-sm font-bold text-foreground">En attente de la remise</h2>
+              <h2 className="text-sm font-bold text-foreground">Livraison en cours</h2>
               <p className="text-muted-foreground">
-                Le livreur a le colis. En attente de la saisie du code par le client sur son dashboard.
+                Le livreur a démarré la livraison. En attente de la remise au client et de la saisie du code sur son
+                espace.
               </p>
               <p className="text-muted-foreground">
-                Expédiée le {order.expediee_at ? date(order.expediee_at) : '—'}
+                Démarrée le {order.expediee_at ? date(order.expediee_at) : '—'}
                 {etat?.expires_at && ` · code valable jusqu'au ${date(etat.expires_at)}`}.
               </p>
             </section>
           )}
 
           {livree && (
-            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
-              <h2 className="text-sm font-bold text-foreground">Encaissement</h2>
-              <p className="text-xs text-muted-foreground">
-                Colis remis le {order.remise_at ? date(order.remise_at) : '—'}. Le livreur remet l'argent : saisissez son
-                code et le montant reçu.
+            <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3 text-xs">
+              <h2 className="text-sm font-bold text-foreground">Confirmation de la vente</h2>
+              <p>Colis remis le {order.remise_at ? date(order.remise_at) : '—'}.</p>
+              <p>Total dû : {euros(Number(order.total))}</p>
+              <p>
+                Montant déclaré par le livreur :{' '}
+                {order.montant_declare != null ? euros(Number(order.montant_declare)) : 'en attente'}
               </p>
-              <EncaissementForm orderId={order.id} total={Number(order.total)} />
+              <ConfirmerVenteButton orderId={order.id} pret={montantOk} />
             </section>
           )}
 
@@ -274,12 +312,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </section>
           )}
 
-          {ouvert && (
+          {(ouvert || annulable) && (
             <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
               {statut === 'en_attente' && (
                 <ActionStatutButton orderId={order.id} statut="payée" libelle="Valider la commande" />
               )}
-              <ActionStatutButton orderId={order.id} statut="annulée" libelle="Annuler la commande" danger />
+              {annulable && (
+                <ActionStatutButton orderId={order.id} statut="annulée" libelle="Annuler la commande" danger />
+              )}
             </section>
           )}
         </div>
