@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useTransition } from 'react';
-import { sendFeedbackAction } from '@/actions/actionFeedback';
+import { envoyerFeedbackInterneAction } from '@/actions/actionFeedback';
 
 export default function FeedbackForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -16,22 +16,44 @@ export default function FeedbackForm() {
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
-      const res = await sendFeedbackAction(formData);
-      if (res?.error) setError(res.error);
-      if (res?.success) {
-        setSuccess(true);
-        formRef.current?.reset();
+      const res = await envoyerFeedbackInterneAction(formData);
+      if (res.error) {
+        setError(res.error);
+        return;
       }
+      setSuccess(true);
+      formRef.current?.reset();
     });
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3 border border-border rounded-xl bg-card p-4">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-3 border border-border rounded-xl bg-card p-4"
+    >
       {error && <div className="p-2 text-xs text-destructive">{error}</div>}
-      {success && <div className="p-2 text-xs text-green-600">Feedback envoyé.</div>}
-      <input name="subject" required placeholder="Sujet" className="px-3 py-2 border border-border rounded-lg bg-background text-xs" />
-      <textarea name="message" required rows={4} placeholder="Votre message" className="px-3 py-2 border border-border rounded-lg bg-background text-xs" />
-      <button type="submit" disabled={isPending} className="self-end px-4 py-2 bg-shop-orange text-white text-xs font-bold rounded-lg disabled:opacity-50">
+      {success && <div className="p-2 text-xs text-green-600">Message envoyé.</div>}
+      <input
+        name="subject"
+        required
+        minLength={3}
+        placeholder="Sujet"
+        className="px-3 py-2 border border-border rounded-lg bg-background text-xs"
+      />
+      <textarea
+        name="message"
+        required
+        minLength={10}
+        rows={4}
+        placeholder="Votre message"
+        className="px-3 py-2 border border-border rounded-lg bg-background text-xs"
+      />
+      <button
+        type="submit"
+        disabled={isPending}
+        className="self-end px-4 py-2 bg-shop-orange text-white text-xs font-bold rounded-lg disabled:opacity-50"
+      >
         {isPending ? 'Envoi...' : 'Envoyer'}
       </button>
     </form>

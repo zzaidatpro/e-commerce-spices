@@ -180,27 +180,42 @@ export type Database = {
       };
       feedbacks: {
         Row: {
+          categorie: string;
           created_at: string;
           from_profile_id: string;
           id: string;
           message: string;
+          reponse: string | null;
+          reponse_at: string | null;
+          reponse_lue_at: string | null;
+          reponse_par: string | null;
           status: string;
           subject: string;
         };
         ComputedFields: never;
         Insert: {
+          categorie?: string;
           created_at?: string;
           from_profile_id: string;
           id?: string;
           message: string;
+          reponse?: string | null;
+          reponse_at?: string | null;
+          reponse_lue_at?: string | null;
+          reponse_par?: string | null;
           status?: string;
           subject: string;
         };
         Update: {
+          categorie?: string;
           created_at?: string;
           from_profile_id?: string;
           id?: string;
           message?: string;
+          reponse?: string | null;
+          reponse_at?: string | null;
+          reponse_lue_at?: string | null;
+          reponse_par?: string | null;
           status?: string;
           subject?: string;
         };
@@ -208,6 +223,13 @@ export type Database = {
           {
             foreignKeyName: 'feedbacks_from_profile_id_fkey';
             columns: ['from_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'feedbacks_reponse_par_fkey';
+            columns: ['reponse_par'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -267,6 +289,48 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          corps: string | null;
+          created_at: string;
+          destinataire_id: string;
+          id: string;
+          lien: string | null;
+          lu_at: string | null;
+          titre: string;
+          type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          corps?: string | null;
+          created_at?: string;
+          destinataire_id: string;
+          id?: string;
+          lien?: string | null;
+          lu_at?: string | null;
+          titre: string;
+          type: string;
+        };
+        Update: {
+          corps?: string | null;
+          created_at?: string;
+          destinataire_id?: string;
+          id?: string;
+          lien?: string | null;
+          lu_at?: string | null;
+          titre?: string;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_destinataire_id_fkey';
+            columns: ['destinataire_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       order_items: {
         Row: {
           id: string;
@@ -315,6 +379,7 @@ export type Database = {
           code_envoye_at: string | null;
           code_recu_at: string | null;
           created_at: string;
+          demarree_at: string | null;
           designe_at: string | null;
           encaissement_at: string | null;
           encaissement_livreur_id: string | null;
@@ -340,6 +405,7 @@ export type Database = {
           code_envoye_at?: string | null;
           code_recu_at?: string | null;
           created_at?: string;
+          demarree_at?: string | null;
           designe_at?: string | null;
           encaissement_at?: string | null;
           encaissement_livreur_id?: string | null;
@@ -364,6 +430,7 @@ export type Database = {
           code_envoye_at?: string | null;
           code_recu_at?: string | null;
           created_at?: string;
+          demarree_at?: string | null;
           designe_at?: string | null;
           encaissement_at?: string | null;
           encaissement_livreur_id?: string | null;
@@ -861,6 +928,7 @@ export type Database = {
       demander_retour: { Args: { p_motif: string; p_order: string }; Returns: string };
       demarrer_livraison: { Args: { p_order: string }; Returns: undefined };
       designer_livreur: { Args: { p_livreur: string; p_order: string }; Returns: string };
+      envoyer_feedback_client: { Args: { p_message: string; p_sujet: string }; Returns: string };
       est_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       est_livreur: { Args: Record<PropertyKey, never>; Returns: boolean };
       est_staff: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -875,6 +943,16 @@ export type Database = {
       generer_code_livraison: { Args: { p_order: string }; Returns: string };
       generer_code_livreur: { Args: Record<PropertyKey, never>; Returns: string };
       generer_codes_promo: { Args: Record<PropertyKey, never>; Returns: number };
+      historique_livreur: {
+        Args: { p_periode?: string; p_ref?: string };
+        Returns: {
+          montant_total: number;
+          nb_confirmees: number;
+          nb_livraisons: number;
+          nb_refusees: number;
+          periode_debut: string;
+        }[];
+      };
       is_admin_or_livreur: { Args: { allowed_roles: string[] }; Returns: boolean };
       journaliser_livraison: {
         Args: { p_detail?: string; p_evenement: string; p_livreur: string; p_order: string };
@@ -883,6 +961,7 @@ export type Database = {
       liste_clients: {
         Args: Record<PropertyKey, never>;
         Returns: {
+          chiffre_affaires: number;
           created_at: string;
           email: string;
           id: string;
@@ -892,6 +971,23 @@ export type Database = {
           status: string;
           telephone: string;
           whatsapp: string;
+        }[];
+      };
+      liste_feedbacks: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          auteur_email: string;
+          auteur_nom: string;
+          auteur_prenom: string;
+          categorie: string;
+          created_at: string;
+          id: string;
+          message: string;
+          reponse: string;
+          reponse_at: string;
+          reponse_lue_at: string;
+          status: string;
+          subject: string;
         }[];
       };
       liste_livreurs: {
@@ -906,6 +1002,10 @@ export type Database = {
       };
       livreur_peut_voir_adresse: { Args: { p_addr: string }; Returns: boolean };
       marquer_code_envoye: { Args: { p_order: string }; Returns: undefined };
+      marquer_feedback_lu: { Args: { p_id: string }; Returns: undefined };
+      marquer_notification_lue: { Args: { p_id: string }; Returns: undefined };
+      marquer_reponse_lue: { Args: { p_id: string }; Returns: undefined };
+      marquer_toutes_notifications_lues: { Args: Record<PropertyKey, never>; Returns: number };
       meilleures_ventes: {
         Args: { p_limit?: number; p_periode?: string; p_ref?: string };
         Returns: {
@@ -931,6 +1031,7 @@ export type Database = {
         Args: { p_montant: number; p_reference: string; p_retour: string; p_stock_remis: boolean };
         Returns: undefined;
       };
+      repondre_feedback: { Args: { p_id: string; p_reponse: string }; Returns: undefined };
       tableau_de_bord: { Args: Record<PropertyKey, never>; Returns: Json };
       valider_code_reception: { Args: { p_code: string; p_order: string }; Returns: Json };
       valider_et_payer_commande: { Args: { p_order_id: string }; Returns: undefined };

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@repo/database/server';
 import DashboardForm from './dashboard-form';
 import { ConfirmerLivraisonForm } from '@/components/molecules/ConfirmerLivraisonForm';
+import { FeedbackClientSection } from '@/components/molecules/FeedbackClientSection';
 
 
 export default async function DashboardPage() {
@@ -31,6 +32,13 @@ export default async function DashboardPage() {
     .eq('statut', 'expédiée')
     .order('expediee_at', { ascending: false });
 
+  const { data: mesFeedbacks } = await supabase
+  .from('feedbacks')
+  .select('id, subject, message, created_at, reponse, reponse_at, reponse_lue_at')
+  .eq('from_profile_id', user.id)
+  .eq('categorie', 'client')
+  .order('created_at', { ascending: false })
+  .limit(10);
   return (
   <>
     {(enCours ?? []).map((c) => (
@@ -42,5 +50,8 @@ export default async function DashboardPage() {
       initialProfile={profile ?? {}}
       initialOrders={orders ?? []}
     />
+     <div className="max-w-6xl mx-auto px-4 pt-8">
+      <FeedbackClientSection feedbacks={mesFeedbacks ?? []} />
+    </div>
   </>
 )}

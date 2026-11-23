@@ -9,6 +9,7 @@ import AdminBar from "../molecules/AdminBar";
 import { Badge } from "@repo/ui";
 import { menuPourRole, type RoleSite } from "@repo/lib";
 import { useCart } from "@/lib/useCart";
+import { NotificationBell } from '@/components/molecules/NotificationBell';
 
 interface HeaderProps {
   role: RoleSite;
@@ -36,6 +37,7 @@ export default function Header({ role }: HeaderProps) {
 
         <div className="flex items-center gap-2 sm:gap-3">
           <AdminBar />
+          <NotificationBell />
 
           {/* Panier : visible sur toutes les tailles, sauf pour le livreur */}
           {!estLivreur && (

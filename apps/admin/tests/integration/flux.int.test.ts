@@ -275,5 +275,69 @@ it('historique livreur : seulement ses livraisons', async () => {
   const { error: refus } = await clientS.rpc('historique_livreur', { p_periode: 'mois' });
   expect(refus).not.toBeNull();
 });
+it('demande de nouveau code : limite active, résolution et cooldown de 2h', async () => {
+    const c = await commandeExpediee();
+
+    // 1. Première demande valide par le client sur sa commande expédiée
+    const d1 = await clientS.rpc('demander_nouveau_code', { p_order: c.id });
+    expect(d1.error, d1.error?.message).toBeNull();
+    expect(ok(d1.data), (d1.data as { message?: string }).message).toBe(true);
+
+    const { data: ouvertes } = await admin
+      .from('demandes_code')
+      .select('id, demande_at, traitee_at')
+      .eq('order_id', c.id)
+      .is('traitee_at', null);
+    expect(ouvertes ?? []).toHaveLength(1);
+
+    // 2. Deuxième demande immédiate refusée (demande active déjà ouverte)
+    const d2 = await clientS.rpc('demander_nouveau_code', { p_order: c.id });
+    expect(d2.error, d2.error?.message).toBeNull();
+    expect(ok(d2.data)).toBe(false);
+
+    // 3. Le manager régénère le code -> marque la demande comme traitée (traitee_at renseigné)
+    const gen = await managerS.rpc('generer_code_livraison', { p_order: c.id });
+    expect(gen.error, gen.error?.message).toBeNull();
+
+    const { data: apresTraitement } = await admin
+      .from('demandes_code')
+      .select('id, demande_at, traitee_at')
+      .eq('order_id', c.id);
+    expect(apresTraitement ?? []).toHaveLength(1);
+    expect(apresTraitement![0].traitee_at).not.toBeNull();
+
+    // 4. Nouvelle demande dans la fenêtre de cooldown de 2h -> refusée
+    const d3 = await clientS.rpc('demander_nouveau_code', { p_order: c.id });
+    expect(d3.error, d3.error?.message).toBeNull();
+    expect(ok(d3.data)).toBe(false);
+
+    // 5. Simulation de plus de 2h écoulées -> nouvelle demande acceptée
+    await admin
+      .from('demandes_code')
+      .update({
+        demande_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+        traitee_at: new Date(Date.now() - 2.5 * 3600_000).toISOString(),
+      })
+      .eq('id', apresTraitement![0].id);
+
+    const d4 = await clientS.rpc('demander_nouveau_code', { p_order: c.id });
+    expect(d4.error, d4.error?.message).toBeNull();
+    expect(ok(d4.data), (d4.data as { message?: string }).message).toBe(true);
+  });
+
+  it('demande de nouveau code : refusée pour un autre client ou une commande non expédiée', async () => {
+    const c = await commandeExpediee();
+    const autreClient = await creer('client');
+    const autreClientS = await connecte(autreClient.email);
+
+    const interdit = await autreClientS.rpc('demander_nouveau_code', { p_order: c.id });
+    expect(interdit.error, interdit.error?.message).toBeNull();
+    expect(ok(interdit.data)).toBe(false);
+
+    const idNonExpediee = await nouvelleCommande();
+    const pasExpediee = await clientS.rpc('demander_nouveau_code', { p_order: idNonExpediee });
+    expect(pasExpediee.error, pasExpediee.error?.message).toBeNull();
+    expect(ok(pasExpediee.data)).toBe(false);
+  });
 
 });
