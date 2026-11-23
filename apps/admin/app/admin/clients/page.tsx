@@ -11,6 +11,7 @@ type ClientLigne = {
   whatsapp: string | null;
   status: string | null;
   nb_commandes: number | string;
+  chiffre_affaires: number | string;
   created_at: string;
 };
 
@@ -53,7 +54,7 @@ export default async function ClientsPage({
 
   const clients: ClientLigne[] = lignes.filter((c: ClientLigne) => {
     if (!recherche) return true;
-    return [c.nom, c.prenom, c.email, c.telephone]
+    return [c.nom, c.prenom, c.email, c.telephone, c.whatsapp]
       .filter((v): v is string => Boolean(v))
       .some((v: string) => v.toLowerCase().includes(recherche));
   });
@@ -64,7 +65,7 @@ export default async function ClientsPage({
         <div>
           <h1 className="text-xl font-bold text-foreground">Clients</h1>
           <p className="text-xs text-muted-foreground">
-            {clients.length} client(s){isAdmin ? '' : ' · lecture seule'}
+            {clients.length} client(s){isAdmin}
           </p>
         </div>
 
@@ -93,6 +94,7 @@ export default async function ClientsPage({
               <th className="p-4">Client</th>
               <th className="p-4">Contact</th>
               <th className="p-4">Commandes</th>
+              <th className="p-4 text-right">Chiffre d'affaires</th>
               <th className="p-4">Inscrit le</th>
               <th className="p-4">Statut</th>
               {isAdmin && <th className="p-4 text-right">Action</th>}
@@ -129,6 +131,9 @@ export default async function ClientsPage({
                       )}
                     </td>
                     <td className="p-4">{Number(c.nb_commandes)}</td>
+                    <td className="p-4 text-right font-semibold">
+                      {Number(c.chiffre_affaires).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA
+                    </td>
                     <td className="p-4 text-muted-foreground">
                       {new Date(c.created_at).toLocaleDateString('fr-FR')}
                     </td>
@@ -151,7 +156,7 @@ export default async function ClientsPage({
               })
             ) : (
               <tr>
-                <td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-muted-foreground">
+                <td colSpan={isAdmin ? 7 : 6} className="p-8 text-center text-muted-foreground">
                   Aucun client trouvé.
                 </td>
               </tr>

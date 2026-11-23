@@ -1,5 +1,5 @@
-begin;
-set local role anon;
-select current_user, session_user;
-select count(*) from public.rates;
-rollback;
+await admin.auth.admin.createUser({
+  email: 'manager2026@test.com',
+  password: 'manager2026',
+  email_confirm: true,
+});

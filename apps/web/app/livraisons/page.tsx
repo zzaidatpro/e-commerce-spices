@@ -62,7 +62,7 @@ export default async function LivraisonsPage({
 
   const livraisons = (data ?? []) as unknown as Livraison[];
 
-  // Coordonnées du client : seulement pendant la livraison en cours
+  // Coordonnées du client : livraison en cours
   const contacts = await Promise.all(
     livraisons.map((l) =>
       l.statut === 'expédiée' ? supabase.rpc('contact_livraison', { p_order: l.id }) : null
