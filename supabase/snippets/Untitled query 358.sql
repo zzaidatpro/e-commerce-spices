@@ -1,5 +1,1 @@
-await admin.auth.admin.createUser({
-  email: 'manager2026@test.com',
-  password: 'manager2026',
-  email_confirm: true,
-});
+select destinataire_id, type, titre from public.notifications order by created_at desc limit 5;

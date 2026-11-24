@@ -40,26 +40,29 @@ export function LivreurForm({
   const [valeur, setValeur] = useState(livreurId ?? '');
   const [erreur, setErreur] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
+  const [succes, setSucces] = useState(false);
   const enregistrer = () => {
     setErreur(null);
     startTransition(async () => {
       const res = await assignerLivreurAction(orderId, valeur);
       if (res.error) setErreur(res.error);
-      else router.refresh();
+      else 
+      setSucces(true);
+      router.refresh();
     });
   };
-
+  
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <select value={valeur} onChange={(e) => setValeur(e.target.value)} className={`${champ} flex-1`}>
+        <select data-testid="livreur-select" value={valeur} onChange={(e) => setValeur(e.target.value)} className={`${champ} flex-1`}>
           <option value="">Choisir un livreur</option>
           {livreurs.map((l) => (
             <option key={l.id} value={l.id}>
               {l.prenom} {l.nom}
             </option>
           ))}
+          {succes && <span className="text-[11px] text-green-600">Livreur désigné.</span>}
         </select>
         <button
           type="button"
