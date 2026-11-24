@@ -73,7 +73,7 @@ export function LivreurForm({
           {isPending ? '...' : 'Désigner'}
         </button>
       </div>
-      {erreur && <span className="text-[11px] text-destructive">{erreur}</span>}
+      {erreur && <span data-testid="erreur-designation" className="text-[11px] text-destructive">{erreur}</span>}
     </div>
   );
 }

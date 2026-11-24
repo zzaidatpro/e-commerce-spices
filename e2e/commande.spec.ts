@@ -16,7 +16,14 @@ test('désignation, code, validation et acceptation par le livreur', async ({ br
   // await managerPage.getByRole('combobox').first().selectOption(c.livreur.id);
   await managerPage.getByTestId('livreur-select').selectOption(c.livreur.id);
   await managerPage.getByRole('button', { name: 'Désigner', exact: true }).click();
-  await expect(
+ const titreCode = managerPage.getByRole('heading', { name: 'Code de livraison' });
+ const erreurDesignation = managerPage.getByTestId('erreur-designation');
+ await expect(titreCode.or(erreurDesignation)).toBeVisible({ timeout: 15_000 });
+ if (await erreurDesignation.isVisible()) {
+  throw new Error(`Désignation refusée : ${await erreurDesignation.textContent()}`);
+}
+await managerPage.getByRole('button', { name: /Générer le code/ }).click();
+await expect(
   managerPage.getByText('Livreur désigné.')
   .or(managerPage.getByText(/Livreur invalide|Un livreur est déjà assigne |Commande assignee/))
   .filter({ visible: true })

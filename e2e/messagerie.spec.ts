@@ -20,12 +20,17 @@ test('client → staff : message, réponse, notifications des deux côtés', asy
   await loginAdmin(managerPage, 'manager');
   await managerPage.goto(`${ADMIN}/admin`);
   await managerPage.getByTestId('notif-bell').click();
-  await expect(managerPage.getByTestId('notif-list').getByText('Nouveau message client')).toBeVisible();
+  const notifManager = managerPage
+  .getByTestId('notif-list')
+  .getByRole('link')
+  .filter({ hasText: sujet });
+  await expect(notifManager).toHaveCount(1);
+  await expect(notifManager.getByText('Nouveau message client')).toBeVisible();
 
   await managerPage.goto(`${ADMIN}/admin/feedback`);
   const carte = managerPage.locator('article', { hasText: sujet });
   await expect(carte).toBeVisible();
-  await expect(carte.getByText('E2E Client')).toBeVisible();
+  await expect(carte.getByText('Client E2E')).toBeVisible();
 
   await carte.locator('textarea[name="reponse"]').fill('Merci, bien reçu.');
   await carte.getByRole('button', { name: 'Répondre', exact: true }).click();
@@ -35,7 +40,12 @@ test('client → staff : message, réponse, notifications des deux côtés', asy
   await clientPage.reload();
   await expect(clientPage.getByText('Merci, bien reçu.')).toBeVisible();
   await clientPage.getByTestId('notif-bell').click();
-  await expect(clientPage.getByTestId('notif-list').getByText('Réponse à votre message')).toBeVisible();
+  const notifClient = clientPage
+  .getByTestId('notif-list')
+  .getByRole('link')
+  .filter({ hasText: sujet });
+  await expect(notifClient).toHaveCount(1);
+  await expect(notifClient.getByText('Réponse à votre message')).toBeVisible();
 
   await clientCtx.close();
   await managerCtx.close();
