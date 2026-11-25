@@ -17,7 +17,7 @@ jobs:
       - checkout
       - run:
           name: Installer pnpm
-          command: sudo npm install -g pnpm@9
+          command: sudo npm install -g pnpm@12.8.1
       - restore_cache:
           keys:
             - v3-deps-{{ checksum "pnpm-lock.yaml" }}
@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Installer pnpm
           command: |
-            npm install -g pnpm@9
+            npm install -g pnpm@12.8.1
             pnpm install --frozen-lockfile
       - run:
           name: Démarrer Supabase local
