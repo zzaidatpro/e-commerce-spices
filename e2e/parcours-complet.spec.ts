@@ -57,7 +57,7 @@ test('parcours complet : désignation → remise → déclaration → confirmati
     const formulaireRemise = clientPage.locator('form', { hasText: 'Réception' }).first();
     await formulaireRemise.getByRole('textbox').fill(code);
     await formulaireRemise.getByRole('button', { name: /confirmer/i }).click();
-    await expect(clientPage.getByText('Colis remis')).toBeVisible();
+    await expect(clientPage.locator('ol').getByText('Colis remis')).toBeVisible();
 
     // 4. Livreur : déclaration du montant remis
     await livreurPage.reload();
@@ -74,8 +74,9 @@ test('parcours complet : désignation → remise → déclaration → confirmati
 
     // 6. Client : timeline finale
     await clientPage.reload();
-    await expect(clientPage.getByText('Vente confirmée')).toBeVisible();
-    await expect(clientPage.getByText('Opération terminée')).toBeVisible();
+    const timeline = clientPage.locator('ol');
+    await expect(timeline.getByText('Vente confirmée')).toBeVisible();
+    await expect(timeline.getByText('Opération terminée')).toBeVisible();
   } finally {
     await managerCtx.close();
     await livreurCtx.close();

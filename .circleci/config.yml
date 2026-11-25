@@ -10,25 +10,44 @@ executors:
       image: ubuntu-2204:current
     working_directory: ~/repo
 
+commands:
+  install-pnpm-12:
+    steps:
+      - run:
+          name: Installer pnpm@12.8.1
+          command: |
+            sudo npm install -g pnpm@12.8.1
+            pnpm --version
+
+  restore-pnpm-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - v4-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
+            - v4-pnpm-12.8.1-
+
+  save-pnpm-cache:
+    steps:
+      - save_cache:
+          key: v4-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.local/share/pnpm/store
+            - ~/.cache/pnpm
+
 jobs:
   quality:
     executor: node-docker
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
     steps:
       - checkout
-      - run:
-          name: Installer pnpm
-          command: sudo npm install -g pnpm@9
-      - restore_cache:
-          keys:
-            - v3-deps-{{ checksum "pnpm-lock.yaml" }}
-            - v3-deps-
+      - install-pnpm-12
+      - restore-pnpm-cache
       - run:
           name: Installer les dépendances
           command: pnpm install --frozen-lockfile
-      - save_cache:
-          paths:
-            - ~/.local/share/pnpm/store
-          key: v3-deps-{{ checksum "pnpm-lock.yaml" }}
+      - save-pnpm-cache
       - run:
           name: Vérification des types
           command: pnpm typecheck
@@ -39,32 +58,38 @@ jobs:
           name: Tests unitaires
           command: pnpm test:unit
       - run:
-          name: Build web
-          command: pnpm --filter web build
-          environment:
-            NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+          name: Build web et admin
+          command: pnpm --filter web --filter admin build
 
   e2e:
     executor: machine-docker
     steps:
       - checkout
+      - install-pnpm-12
+      - restore-pnpm-cache
       - run:
-          name: Installer pnpm
-          command: |
-            npm install -g pnpm@9
-            pnpm install --frozen-lockfile
+          name: Installer les dépendances
+          command: pnpm install --frozen-lockfile
+      - save-pnpm-cache
       - run:
-          name: Démarrer Supabase local
+          name: Démarrer Supabase local et réinitialiser la base
           command: |
             pnpm exec supabase start
             pnpm exec supabase db reset
       - run:
           name: Écrire .env.test pour la base locale
           command: bash scripts/ci-env.sh
+      - restore_cache:
+          keys:
+            - v1-playwright-{{ checksum "pnpm-lock.yaml" }}
+            - v1-playwright-
       - run:
           name: Installer Chromium
           command: pnpm exec playwright install --with-deps chromium
+      - save_cache:
+          key: v1-playwright-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.cache/ms-playwright
       - run:
           name: Tests e2e
           command: pnpm exec playwright test
@@ -80,4 +105,5 @@ workflows:
     jobs:
       - quality
       - e2e:
-          requires: [quality]
+          requires:
+            - quality
