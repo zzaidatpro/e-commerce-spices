@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-docker:
     docker:
-      - image: cimg/node:20.11-browsers
+      - image: cimg/node:24.18.0-browsers
     working_directory: ~/repo
   machine-docker:
     machine:
@@ -11,6 +11,23 @@ executors:
     working_directory: ~/repo
 
 commands:
+  install-node-24:
+    steps:
+      - run:
+          name: Installer et activer Node 24
+          command: |
+            if command -v nvm >/dev/null 2>&1 || [ -s "$NVM_DIR/nvm.sh" ]; then
+              export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              nvm install 24
+              nvm use 24
+              nvm alias default 24
+            else
+              curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            node -v
+
   install-pnpm-12:
     steps:
       - run:
@@ -23,13 +40,13 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v4-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
-            - v4-pnpm-12.8.1-
+            - v5-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
+            - v5-pnpm-12.8.1-
 
   save-pnpm-cache:
     steps:
       - save_cache:
-          key: v4-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
+          key: v5-pnpm-12.8.1-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.local/share/pnpm/store
             - ~/.cache/pnpm
@@ -65,6 +82,7 @@ jobs:
     executor: machine-docker
     steps:
       - checkout
+      - install-node-24
       - install-pnpm-12
       - restore-pnpm-cache
       - run:
@@ -81,13 +99,13 @@ jobs:
           command: bash scripts/ci-env.sh
       - restore_cache:
           keys:
-            - v1-playwright-{{ checksum "pnpm-lock.yaml" }}
-            - v1-playwright-
+            - v2-playwright-{{ checksum "pnpm-lock.yaml" }}
+            - v2-playwright-
       - run:
           name: Installer Chromium
           command: pnpm exec playwright install --with-deps chromium
       - save_cache:
-          key: v1-playwright-{{ checksum "pnpm-lock.yaml" }}
+          key: v2-playwright-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.cache/ms-playwright
       - run:
