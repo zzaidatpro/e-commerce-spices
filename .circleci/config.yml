@@ -44,7 +44,6 @@ jobs:
           command: |
             npm install -g pnpm@9
             pnpm install --frozen-lockfile
-            pnpm add -D -w supabase
       - run:
           name: Démarrer Supabase local
           command: |
@@ -53,13 +52,9 @@ jobs:
       - run:
           name: Écrire .env.test depuis la base locale
           command: |
-            cat > apps/admin/.env.test <<EOF
-            SUPABASE_URL=http://127.0.0.1:54321
-            SUPABASE_ANON_KEY=$(pnpm exec supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2- | tr -d '"')
-            SUPABASE_SERVICE_ROLE_KEY=$(pnpm exec supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d= -f2- | tr -d '"')
-            NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=$(pnpm exec supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2- | tr -d '"')
-            EOF
+                  - run:
+          name: Écrire .env.test pour la base locale
+          command: bash scripts/ci-env.sh
       - run:
           name: Installer Chromium
           command: pnpm exec playwright install --with-deps chromium
