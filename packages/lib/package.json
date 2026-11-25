@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "vitest": "^5.1.0"
+  },
+  "scripts": {
+    "test:unit": "vitest run"
   }
 }
