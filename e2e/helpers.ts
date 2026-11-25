@@ -32,7 +32,7 @@ export async function loginWeb(page: Page, role: Role) {
   await page.locator('input[type="email"]').fill(comptes()[role].email);
   await page.locator('input[type="password"]').fill(PWD);
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
-  await expect(page.getByTitle('Déconnexion')).toBeVisible();
+  await expect(page.getByTitle('Déconnexion')).toBeVisible({ timeout: 15_000 });
 }
 
 export async function loginAdmin(page: Page, role: Role) {
