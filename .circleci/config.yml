@@ -14,19 +14,12 @@ commands:
   install-node-24:
     steps:
       - run:
-          name: Installer et activer Node 24
+          name: Installer Node.js 24 et npm
           command: |
-            if command -v nvm >/dev/null 2>&1 || [ -s "$NVM_DIR/nvm.sh" ]; then
-              export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              nvm install 24
-              nvm use 24
-              nvm alias default 24
-            else
-              curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
+            curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+            sudo apt-get install -y nodejs
             node -v
+            npm -v
 
   install-pnpm-12:
     steps:
