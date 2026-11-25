@@ -15,19 +15,29 @@ jobs:
     executor: node-docker
     steps:
       - checkout
-      - run: npm install -g pnpm@9
+      - run:
+          name: Installer pnpm
+          command: npm install -g pnpm@9
       - restore_cache:
           keys:
             - v3-deps-{{ checksum "pnpm-lock.yaml" }}
             - v3-deps-
-      - run: pnpm install --frozen-lockfile
+      - run:
+          name: Installer les dépendances
+          command: pnpm install --frozen-lockfile
       - save_cache:
           paths:
             - ~/.local/share/pnpm/store
           key: v3-deps-{{ checksum "pnpm-lock.yaml" }}
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm test:unit
+      - run:
+          name: Vérification des types
+          command: pnpm typecheck
+      - run:
+          name: Lint
+          command: pnpm lint
+      - run:
+          name: Tests unitaires
+          command: pnpm test:unit
       - run:
           name: Build web
           command: pnpm --filter web build
@@ -40,7 +50,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Installer pnpm et la CLI Supabase
+          name: Installer pnpm
           command: |
             npm install -g pnpm@9
             pnpm install --frozen-lockfile
@@ -50,9 +60,6 @@ jobs:
             pnpm exec supabase start
             pnpm exec supabase db reset
       - run:
-          name: Écrire .env.test depuis la base locale
-          command: |
-                  - run:
           name: Écrire .env.test pour la base locale
           command: bash scripts/ci-env.sh
       - run:
