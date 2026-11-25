@@ -73,6 +73,10 @@ jobs:
 
   e2e:
     executor: machine-docker
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+      NEEDRESTART_MODE: "a"
+      NEEDRESTART_SUSPEND: "1"
     steps:
       - checkout
       - install-node-24
