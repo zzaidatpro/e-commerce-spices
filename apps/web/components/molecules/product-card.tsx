@@ -4,7 +4,7 @@ import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
-import AddToCartButton from '../atoms/AddToCartButton';
+import AddToCartButton from '@/components/atoms/AddToCartButton';
 import { ajouterFavori, retirerFavori } from '@/actions/actionWishlist'; 
 
 export interface ProductItem {

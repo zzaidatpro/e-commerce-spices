@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
-import { useCart } from "@/lib/useCart";
+import { useCart } from "@/lib-web/useCart";
 
 interface CartSheetProps {
   isOpen: boolean;

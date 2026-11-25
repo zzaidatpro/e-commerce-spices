@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { assignerLivreurAction, marquerCodeEnvoyeAction, expedierAction } from '@/actions/actionVentes';
-import { genererCodeAction, changerStatutAction } from '@/actions/actionOrders';
-import { versWhatsapp } from '@/lib/whatsapp';
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { assignerLivreurAction, marquerCodeEnvoyeAction, expedierAction } from "@/actions/actionVentes";
+import { genererCodeAction, changerStatutAction } from "@/actions/actionOrders";
+import { versWhatsapp } from "@/lib-admin/whatsapp";
 
 export type Livreur = {
   id: string;
@@ -20,12 +20,12 @@ export type EtatCode = {
   expires_at: string | null;
 };
 
-const champ = 'px-3 py-2 border border-border rounded-xl bg-background text-foreground text-xs';
-const bouton = 'px-3 py-2 bg-shop-orange text-white text-xs font-bold rounded-xl disabled:opacity-50';
-const boutonDanger = 'px-3 py-2 bg-red-600 text-white text-xs font-bold rounded-xl disabled:opacity-50';
+const champ = "px-3 py-2 border border-border rounded-xl bg-background text-foreground text-xs";
+const bouton = "px-3 py-2 bg-shop-orange text-white text-xs font-bold rounded-xl disabled:opacity-50";
+const boutonDanger = "px-3 py-2 bg-red-600 text-white text-xs font-bold rounded-xl disabled:opacity-50";
 
 const formater = (d: string) =>
-  new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  new Date(d).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export function LivreurForm({
   orderId,
@@ -37,7 +37,7 @@ export function LivreurForm({
   livreurId: string | null;
 }) {
   const router = useRouter();
-  const [valeur, setValeur] = useState(livreurId ?? '');
+  const [valeur, setValeur] = useState(livreurId ?? "");
   const [erreur, setErreur] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [succes, setSucces] = useState(false);
@@ -46,16 +46,20 @@ export function LivreurForm({
     startTransition(async () => {
       const res = await assignerLivreurAction(orderId, valeur);
       if (res.error) setErreur(res.error);
-      else 
-      setSucces(true);
+      else setSucces(true);
       router.refresh();
     });
   };
-  
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <select data-testid="livreur-select" value={valeur} onChange={(e) => setValeur(e.target.value)} className={`${champ} flex-1`}>
+        <select
+          data-testid="livreur-select"
+          value={valeur}
+          onChange={(e) => setValeur(e.target.value)}
+          className={`${champ} flex-1`}
+        >
           <option value="">Choisir un livreur</option>
           {livreurs.map((l) => (
             <option key={l.id} value={l.id}>
@@ -70,10 +74,14 @@ export function LivreurForm({
           disabled={!valeur || valeur === livreurId || isPending}
           className={bouton}
         >
-          {isPending ? '...' : 'Désigner'}
+          {isPending ? "..." : "Désigner"}
         </button>
       </div>
-      {erreur && <span data-testid="erreur-designation" className="text-[11px] text-destructive">{erreur}</span>}
+      {erreur && (
+        <span data-testid="erreur-designation" className="text-[11px] text-destructive">
+          {erreur}
+        </span>
+      )}
     </div>
   );
 }
@@ -102,8 +110,8 @@ export function CodeLivraisonPanel({
   const envoye = !!etat?.envoye_at || envoyeLocal;
   const telephone = versWhatsapp(livreur.telephone);
   const message = code
-    ? `Bonjour ${livreur.prenom ?? ''}, code de livraison de la commande #${reference} : ${code}. À remettre au client à la livraison.`
-    : '';
+    ? `Bonjour ${livreur.prenom ?? ""}, code de livraison de la commande #${reference} : ${code}. À remettre au client à la livraison.`
+    : "";
   const lienWa = telephone && code ? `https://wa.me/${telephone}?text=${encodeURIComponent(message)}` : null;
 
   const generer = () => {
@@ -135,14 +143,16 @@ export function CodeLivraisonPanel({
     <div className="flex flex-col gap-3 text-xs">
       <div>
         <button type="button" onClick={generer} disabled={isPending} className={bouton}>
-          {isPending ? '...' : etat?.existe ? 'Régénérer le code' : 'Générer le code'}
+          {isPending ? "..." : etat?.existe ? "Régénérer le code" : "Générer le code"}
         </button>
       </div>
 
       {code && (
         <div className="p-3 border border-shop-orange/40 rounded-xl bg-shop-orange/5 flex flex-col gap-2">
           <p className="text-muted-foreground">Code à remettre au livreur (affiché une seule fois) :</p>
-          <p data-testid="code-livraison" className="text-2xl font-mono font-bold tracking-widest text-foreground">{code}</p>
+          <p data-testid="code-livraison" className="text-2xl font-mono font-bold tracking-widest text-foreground">
+            {code}
+          </p>
           <div className="flex flex-wrap gap-2">
             {lienWa ? (
               <a href={lienWa} target="_blank" rel="noopener noreferrer" className={bouton}>
@@ -173,7 +183,7 @@ export function CodeLivraisonPanel({
 
       {envoye && (
         <p className="text-green-600 font-semibold">
-          Code envoyé au livreur{etat?.envoye_at ? ` le ${formater(etat.envoye_at)}` : ''}.
+          Code envoyé au livreur{etat?.envoye_at ? ` le ${formater(etat.envoye_at)}` : ""}.
         </p>
       )}
 
@@ -182,15 +192,7 @@ export function CodeLivraisonPanel({
   );
 }
 
-export function ExpedierButton({
-  orderId,
-  livreurId,
-  pret,
-}: {
-  orderId: string;
-  livreurId: string;
-  pret: boolean;
-}) {
+export function ExpedierButton({ orderId, livreurId, pret }: { orderId: string; livreurId: string; pret: boolean }) {
   const router = useRouter();
   const [erreur, setErreur] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -207,7 +209,7 @@ export function ExpedierButton({
   return (
     <div className="flex flex-col gap-2">
       <button type="button" onClick={expedier} disabled={!pret || isPending} className={bouton}>
-        {isPending ? '...' : 'Expédier la commande'}
+        {isPending ? "..." : "Expédier la commande"}
       </button>
       {!pret && (
         <p className="text-[11px] text-muted-foreground">
@@ -246,7 +248,7 @@ export function ActionStatutButton({
   return (
     <div className="flex flex-col gap-1">
       <button type="button" onClick={executer} disabled={isPending} className={danger ? boutonDanger : bouton}>
-        {isPending ? '...' : libelle}
+        {isPending ? "..." : libelle}
       </button>
       {erreur && <span className="text-[11px] text-destructive">{erreur}</span>}
     </div>

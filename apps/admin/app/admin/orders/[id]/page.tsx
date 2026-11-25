@@ -1,17 +1,17 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { requireRole } from '@/actions/helper';
-import { STATUT_LABELS } from '@/lib/commandes';
-import { versWhatsapp } from '@/lib/whatsapp';
-import { RemiseForm } from '@/components/molecules/OrderActions';
-import { ConfirmerVenteButton } from '@/components/molecules/ConfirmerVenteButton';
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireRole } from "@/actions/helper";
+import { STATUT_LABELS } from "@/lib-admin/commandes";
+import { versWhatsapp } from "@/lib-admin/whatsapp";
+import { RemiseForm } from "@/components/molecules/OrderActions";
+import { ConfirmerVenteButton } from "@/components/molecules/ConfirmerVenteButton";
 import {
   LivreurForm,
   CodeLivraisonPanel,
   ActionStatutButton,
   type Livreur,
   type EtatCode,
-} from '@/components/molecules/WorkflowLivraison';
+} from "@/components/molecules/WorkflowLivraison";
 
 type Ligne = {
   id: string;
@@ -47,30 +47,32 @@ type Commande = {
   terminee_at: string | null;
 };
 
-const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
+const euros = (n: number) => `${n.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA`;
 const date = (d: string) =>
-  new Date(d).toLocaleString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  new Date(d).toLocaleString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const auth = await requireRole(['admin', 'manager']);
+  const auth = await requireRole(["admin", "manager"]);
   const sb = auth.supabase;
-  const isAdmin = auth.role === 'admin';
+  const isAdmin = auth.role === "admin";
 
   const { data: row, error } = await sb
-    .from('orders')
-    .select(`
+    .from("orders")
+    .select(
+      `
       id, created_at, total, remise, statut, adresse_liv_id, livreur_id,
       designe_at, code_envoye_at, code_recu_at, acceptee_at, expediee_at,
       remise_at, montant_declare, vente_confirmee_at, terminee_at
-    `)
-    .eq('id', id)
+    `,
+    )
+    .eq("id", id)
     .maybeSingle();
 
   if (error) return <p className="text-xs text-destructive">Erreur : {error.message}</p>;
@@ -79,14 +81,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = row as unknown as Commande;
 
   const [itemsRes, adresseRes, contactRes, livreursRes, etatRes, demandesRes] = await Promise.all([
-    sb.from('order_items').select('id, quantite, prix_facture, produits(nom)').eq('order_id', id),
+    sb.from("order_items").select("id, quantite, prix_facture, produits(nom)").eq("order_id", id),
     order.adresse_liv_id
-      ? sb.from('adresses_livraison').select('adresse_complete, type_lieu').eq('id', order.adresse_liv_id).maybeSingle()
+      ? sb.from("adresses_livraison").select("adresse_complete, type_lieu").eq("id", order.adresse_liv_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    sb.rpc('contact_client_commande', { p_order: id }),
-    sb.rpc('liste_livreurs'),
-    sb.rpc('etat_code_livraison', { p_order: id }),
-    sb.from('demandes_code').select('id, demande_at').eq('order_id', id).is('traitee_at', null),
+    sb.rpc("contact_client_commande", { p_order: id }),
+    sb.rpc("liste_livreurs"),
+    sb.rpc("etat_code_livraison", { p_order: id }),
+    sb.from("demandes_code").select("id, demande_at").eq("order_id", id).is("traitee_at", null),
   ]);
 
   const items = (itemsRes.data ?? []) as Ligne[];
@@ -97,11 +99,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const demandes = demandesRes.data ?? [];
 
   const statut = order.statut;
-  const annulee = statut === 'annulée';
-  const ouvert = statut === 'en_attente' || statut === 'payée';
-  const enCours = statut === 'expédiée';
-  const livree = statut === 'livrée';
-  const confirmee = statut === 'confirmée' || statut === 'remboursée';
+  const annulee = statut === "annulée";
+  const ouvert = statut === "en_attente" || statut === "payée";
+  const enCours = statut === "expédiée";
+  const livree = statut === "livrée";
+  const confirmee = statut === "confirmée" || statut === "remboursée";
 
   // Annulation : seulement avant acceptation du livreur
   const annulable = ouvert && !order.acceptee_at;
@@ -109,23 +111,22 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const livreur = livreurs.find((l) => l.id === order.livreur_id) ?? null;
   const reference = order.id.slice(0, 8);
   const sousTotal = items.reduce((s, i) => s + Number(i.quantite) * Number(i.prix_facture), 0);
-  const nomProduit = (p: Ligne['produits']) => (Array.isArray(p) ? p[0]?.nom : p?.nom) ?? 'Produit supprimé';
+  const nomProduit = (p: Ligne["produits"]) => (Array.isArray(p) ? p[0]?.nom : p?.nom) ?? "Produit supprimé";
   const whatsappClient = versWhatsapp(contact?.whatsapp);
 
   const etapes = [
-    { label: 'Commande reçue', date: order.created_at },
-    { label: 'Livreur désigné', date: order.designe_at },
-    { label: 'Code envoyé', date: order.code_envoye_at },
-    { label: 'Code reçu par le livreur', date: order.code_recu_at },
-    { label: 'Livraison acceptée', date: order.acceptee_at },
-    { label: 'En livraison', date: order.expediee_at },
-    { label: 'Colis remis', date: order.remise_at },
-    { label: 'Vente confirmée', date: order.vente_confirmee_at },
-    { label: 'Opération terminée', date: order.terminee_at },
+    { label: "Commande reçue", date: order.created_at },
+    { label: "Livreur désigné", date: order.designe_at },
+    { label: "Code envoyé", date: order.code_envoye_at },
+    { label: "Code reçu par le livreur", date: order.code_recu_at },
+    { label: "Livraison acceptée", date: order.acceptee_at },
+    { label: "En livraison", date: order.expediee_at },
+    { label: "Colis remis", date: order.remise_at },
+    { label: "Vente confirmée", date: order.vente_confirmee_at },
+    { label: "Opération terminée", date: order.terminee_at },
   ];
 
-  const montantOk =
-    order.montant_declare != null && Number(order.montant_declare) === Number(order.total);
+  const montantOk = order.montant_declare != null && Number(order.montant_declare) === Number(order.total);
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
@@ -139,7 +140,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
         <span
           className={`px-3 py-1 rounded-full text-xs font-bold w-fit ${
-            annulee ? 'bg-red-500/10 text-red-600' : 'bg-muted text-foreground'
+            annulee ? "bg-red-500/10 text-red-600" : "bg-muted text-foreground"
           }`}
         >
           {STATUT_LABELS[statut] ?? statut}
@@ -152,8 +153,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <li key={e.label} className="flex items-center gap-2">
               {i > 0 && <span className="text-muted-foreground">•</span>}
               <span
-                className={e.date ? 'font-semibold text-foreground' : 'text-muted-foreground'}
-                title={e.date ? date(e.date) : 'Non atteint'}
+                className={e.date ? "font-semibold text-foreground" : "text-muted-foreground"}
+                title={e.date ? date(e.date) : "Non atteint"}
               >
                 {e.label}
               </span>
@@ -162,9 +163,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </ol>
       )}
 
-      {annulee && (
-        <p className="text-xs font-semibold text-red-600">Cette commande a été annulée.</p>
-      )}
+      {annulee && <p className="text-xs font-semibold text-red-600">Cette commande a été annulée.</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 flex flex-col gap-6">
@@ -213,9 +212,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <LivreurForm orderId={order.id} livreurs={livreurs} livreurId={null} />
             ) : (
               <p>
-                Livreur :{' '}
+                Livreur :{" "}
                 <span className="font-semibold">
-                  {livreur ? `${livreur.prenom ?? ''} ${livreur.nom ?? ''}`.trim() : '—'}
+                  {livreur ? `${livreur.prenom ?? ""} ${livreur.nom ?? ""}`.trim() : "—"}
                 </span>
               </p>
             )}
@@ -245,7 +244,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 espace.
               </p>
               <p className="text-muted-foreground">
-                Démarrée le {order.expediee_at ? date(order.expediee_at) : '—'}
+                Démarrée le {order.expediee_at ? date(order.expediee_at) : "—"}
                 {etat?.expires_at && ` · code valable jusqu'au ${date(etat.expires_at)}`}.
               </p>
             </section>
@@ -254,11 +253,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {livree && (
             <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3 text-xs">
               <h2 className="text-sm font-bold text-foreground">Confirmation de la vente</h2>
-              <p>Colis remis le {order.remise_at ? date(order.remise_at) : '—'}.</p>
+              <p>Colis remis le {order.remise_at ? date(order.remise_at) : "—"}.</p>
               <p>Total dû : {euros(Number(order.total))}</p>
               <p>
-                Montant déclaré par le livreur :{' '}
-                {order.montant_declare != null ? euros(Number(order.montant_declare)) : 'en attente'}
+                Montant déclaré par le livreur :{" "}
+                {order.montant_declare != null ? euros(Number(order.montant_declare)) : "en attente"}
               </p>
               <ConfirmerVenteButton orderId={order.id} pret={montantOk} />
             </section>
@@ -268,7 +267,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <section className="border border-border rounded-2xl bg-card p-6 text-xs">
               <h2 className="text-sm font-bold text-foreground mb-2">Vente confirmée</h2>
               <p className="text-muted-foreground">
-                Confirmée le {order.vente_confirmee_at ? date(order.vente_confirmee_at) : '—'}. Le délai de retour de 7
+                Confirmée le {order.vente_confirmee_at ? date(order.vente_confirmee_at) : "—"}. Le délai de retour de 7
                 jours court à partir de cette date.
               </p>
             </section>
@@ -314,7 +313,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
           {(ouvert || annulable) && (
             <section className="border border-border rounded-2xl bg-card p-6 flex flex-col gap-3">
-              {statut === 'en_attente' && (
+              {statut === "en_attente" && (
                 <ActionStatutButton orderId={order.id} statut="payée" libelle="Valider la commande" />
               )}
               {annulable && (

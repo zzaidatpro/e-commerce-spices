@@ -1,25 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useTransition, type FormEvent } from 'react';
-import {
-  changerStatutAction,
-  appliquerRemiseAction,
-  genererCodeAction,
-} from '@/actions/actionOrders';
-import { STATUT_LABELS, STATUTS_STAFF } from '@/lib/commandes';
+import { useState, useTransition, type FormEvent } from "react";
+import { changerStatutAction, appliquerRemiseAction, genererCodeAction } from "@/actions/actionOrders";
+import { STATUT_LABELS, STATUTS_STAFF } from "@/lib-admin/commandes";
 
-const champ =
-  'px-3 py-2 border border-border rounded-xl bg-background text-foreground text-xs';
-const bouton =
-  'px-3 py-2 bg-shop-orange text-white text-xs font-bold rounded-xl disabled:opacity-50';
+const champ = "px-3 py-2 border border-border rounded-xl bg-background text-foreground text-xs";
+const bouton = "px-3 py-2 bg-shop-orange text-white text-xs font-bold rounded-xl disabled:opacity-50";
 
 export function OrderStatusForm({ orderId, statut }: { orderId: string; statut: string }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Une commande livrée est figée : aucun autre statut n'est proposé
-  const figee = statut === 'livrée';
-  const options: string[] = figee ? ['livrée'] : [...STATUTS_STAFF];
+  const figee = statut === "livrée";
+  const options: string[] = figee ? ["livrée"] : [...STATUTS_STAFF];
 
   const handleChange = (nouveau: string) => {
     setErreur(null);
@@ -69,14 +63,7 @@ export function RemiseForm({ orderId, remise }: { orderId: string; remise: numbe
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <label className="text-xs font-semibold text-foreground">Remise totale (DA)</label>
       <div className="flex gap-2">
-        <input
-          name="remise"
-          type="number"
-          min={0}
-          step="0.01"
-          defaultValue={remise}
-          className={champ}
-        />
+        <input name="remise" type="number" min={0} step="0.01" defaultValue={remise} className={champ} />
         <button type="submit" disabled={isPending} className={bouton}>
           Appliquer
         </button>
@@ -107,7 +94,7 @@ export function CodeLivraisonButton({ orderId }: { orderId: string }) {
   return (
     <div className="flex flex-col gap-2">
       <button type="button" onClick={generer} disabled={isPending} className={bouton}>
-        {isPending ? 'Génération...' : code ? 'Régénérer le code' : 'Générer le code de livraison'}
+        {isPending ? "Génération..." : code ? "Régénérer le code" : "Générer le code de livraison"}
       </button>
 
       {code && (

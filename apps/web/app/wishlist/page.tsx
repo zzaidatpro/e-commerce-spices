@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { Heart } from 'lucide-react';
-import { createClient } from '@repo/database/server';
-import { ProductCard } from '@/components/molecules/product-card';
-import { RetirerFavoriButton } from '@/components/molecules/RetirerFavoriButton';
-import { getFavoriIds } from '@/lib/favoris';
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Heart } from "lucide-react";
+import { createClient } from "@repo/database/server";
+import { ProductCard } from "@/components/molecules/product-card";
+import { RetirerFavoriButton } from "@/components/molecules/RetirerFavoriButton";
+import { getFavoriIds } from "@/lib-web/favoris";
 
 type Produit = {
   id: string;
@@ -18,17 +18,21 @@ type Produit = {
 };
 
 export default async function WishlistPage() {
-    
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) redirect('/');
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) redirect("/");
 
   const { data: favoris, error } = await supabase
-    .from('favoris')
-    .select('produit_id, created_at, produits ( id, nom, slug, prix_unitaire, image_url, family, region, stock )')
-    .eq('profile_id', user.id)
-    .order('created_at', { ascending: false });
+    .from("favoris")
+    .select(
+      "produit_id, created_at, produits ( id, nom, slug, prix_unitaire, image_url, family, region, stock )",
+    )
+    .eq("profile_id", user.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return <p className="p-6 text-xs text-destructive">Erreur de chargement : {error.message}</p>;

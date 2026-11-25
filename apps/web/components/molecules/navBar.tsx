@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { ShoppingCart, Heart, Menu } from 'lucide-react';
-import { cn } from '@repo/ui';
-import { Badge } from '@repo/ui';
-import { menuPourRole, type RoleSite } from '@repo/lib';
-import { useCart } from '@/lib/useCart';
+import React from "react";
+import Link from "next/link";
+import { ShoppingCart, Heart, Menu } from "lucide-react";
+import { cn } from "@repo/ui";
+import { Badge } from "@repo/ui";
+import { menuPourRole, type RoleSite } from "@repo/lib";
+import { useCart } from "@/lib-web/useCart";
 
 interface NavBarProps {
   className?: string;
@@ -16,8 +16,8 @@ interface NavBarProps {
 
 export const NavBar = ({ className, role, onOpenCart }: NavBarProps) => {
   const { totalItems, isHydrated } = useCart();
-  const estLivreur = role === 'livreur';
-  const estClient = role === 'client';
+  const estLivreur = role === "livreur";
+  const estClient = role === "client";
   const liens = menuPourRole(role);
   const quantite = isHydrated ? totalItems : 0;
 
@@ -33,10 +33,10 @@ export const NavBar = ({ className, role, onOpenCart }: NavBarProps) => {
   );
 
   const classeIcone =
-    'p-2 text-foreground/80 hover:text-shop-light-green hover:bg-secondary rounded-md transition-colors relative inline-flex items-center justify-center';
+    "p-2 text-foreground/80 hover:text-shop-light-green hover:bg-secondary rounded-md transition-colors relative inline-flex items-center justify-center";
 
   return (
-    <nav className={cn('w-full border-none bg-transparent', className)}>
+    <nav className={cn("w-full border-none bg-transparent", className)}>
       <div className="text-sm capitalize font-semibold text-lightColor container mx-auto flex h-10 items-center justify-between px-4 sm:px-8">
         <div className="hidden md:flex items-center gap-6">
           {liens.map((item) => (
@@ -53,7 +53,10 @@ export const NavBar = ({ className, role, onOpenCart }: NavBarProps) => {
         </div>
 
         <div className="md:hidden flex items-center">
-          <button className="p-2 text-foreground hover:text-shop-light-green rounded-md" aria-label="Menu">
+          <button
+            className="p-2 text-foreground hover:text-shop-light-green rounded-md"
+            aria-label="Menu"
+          >
             <Menu className="w-6 h-6" />
           </button>
         </div>

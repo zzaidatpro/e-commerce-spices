@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/lib/useCart";
+import { useCart } from "@/lib-web/useCart";
 import { createOrderAction } from "@/actions/createOrder";
 import { createUserClient } from "@repo/database/client";
 import {

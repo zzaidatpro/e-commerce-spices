@@ -1,10 +1,10 @@
-import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, PackageCheck } from 'lucide-react';
-import { createClient } from '@repo/database/server';
-import { TimelineCommande } from '@/components/molecules/TimelineCommande';
-import { ConfirmerLivraisonForm } from '@/components/molecules/ConfirmerLivraisonForm';
-import { statutClient } from '@/lib/statuts-client';
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, PackageCheck } from "lucide-react";
+import { createClient } from "@repo/database/server";
+import { TimelineCommande } from "@/components/molecules/TimelineCommande";
+import { ConfirmerLivraisonForm } from "@/components/molecules/ConfirmerLivraisonForm";
+import { statutClient } from "@/lib-web/statuts-client";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,8 +28,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   if (authError || !user) redirect(`/?redirectTo=/orders/${id}`);
 
   const { data: order, error } = await supabase
-    .from('orders')
-    .select(`
+    .from("orders")
+    .select(
+      `
       id,
       created_at,
       total,
@@ -48,9 +49,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         produits (nom, image_url)
       ),
       adresses_livraison:adresse_liv_id ( adresse_complete, type_lieu )
-    `)
-    .eq('id', id)
-    .eq('client_id', user.id)
+    `,
+    )
+    .eq("id", id)
+    .eq("client_id", user.id)
     .maybeSingle();
 
   if (error) {
@@ -65,7 +67,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     ? order.adresses_livraison[0]
     : order.adresses_livraison;
 
-  const enLivraison = order.statut === 'expédiée';
+  const enLivraison = order.statut === "expédiée";
   const attenteAcceptation = enLivraison && !order.acceptee_at;
   const pretAReceptionner = enLivraison && !!order.acceptee_at;
 
@@ -101,7 +103,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <h2 className="text-xs font-semibold text-shop-orange uppercase tracking-wider">
             Réception du colis
           </h2>
-          <ConfirmerLivraisonForm orderId={order.id}/>
+          <ConfirmerLivraisonForm orderId={order.id} />
         </section>
       )}
 
@@ -110,13 +112,13 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div>
             <h1 className="text-xl font-bold text-foreground">Commande #{order.id.slice(0, 8)}</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Passée le{' '}
-              {new Date(order.created_at).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
+              Passée le{" "}
+              {new Date(order.created_at).toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
               })}
             </p>
           </div>
@@ -143,7 +145,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={produit.image_url}
-                          alt={produit.nom ?? 'Produit'}
+                          alt={produit.nom ?? "Produit"}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -152,15 +154,17 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">
-                        {produit?.nom ?? 'Produit supprimé'}
+                        {produit?.nom ?? "Produit supprimé"}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">Quantité : {item.quantite}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Quantité : {item.quantite}
+                      </p>
                     </div>
                   </div>
                   <p className="text-xs font-semibold text-foreground">
-                    {(Number(item.prix_facture) * item.quantite).toLocaleString('fr-FR', {
+                    {(Number(item.prix_facture) * item.quantite).toLocaleString("fr-FR", {
                       minimumFractionDigits: 2,
-                    })}{' '}
+                    })}{" "}
                     DA
                   </p>
                 </div>
@@ -173,14 +177,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div>
             <h3 className="text-xs font-semibold text-foreground mb-1">Adresse de livraison</h3>
             <p className="text-xs text-muted-foreground">
-              {adresse?.adresse_complete ?? 'Adresse non renseignée'}
+              {adresse?.adresse_complete ?? "Adresse non renseignée"}
               {adresse?.type_lieu && ` (${adresse.type_lieu})`}
             </p>
           </div>
           <div className="text-right flex flex-col justify-end">
             <span className="text-xs text-muted-foreground">Total de la commande</span>
             <span className="text-lg font-bold text-shop-orange">
-              {Number(order.total).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA
+              {Number(order.total).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA
             </span>
           </div>
         </div>

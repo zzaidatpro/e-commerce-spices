@@ -5,8 +5,8 @@ import Footer from "../components/organisms/footer";
 import Header from "../components/organisms/header";
 import "../app/globals.css";
 import { ThemeProvider } from "@/components/templates/theme-provider";
-import { getRoleSite } from "@/lib/session-role";
-import { RoleProvider } from '@/lib/role-context';
+import { getRoleSite } from "@/lib-web/session-role";
+import { RoleProvider } from "@/lib-web/role-context";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,11 +29,16 @@ export default async function RootLayout({
   return (
     <html lang="fr" className={cn("font-sans", poppins.variable)} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <RoleProvider role={role}>
-          <Header role={role} />
-          {children}
-          <Footer role={role} />
+            <Header role={role} />
+            {children}
+            <Footer role={role} />
           </RoleProvider>
         </ThemeProvider>
       </body>

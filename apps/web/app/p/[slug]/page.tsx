@@ -1,12 +1,12 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { ArrowLeft, Tag, MapPin } from 'lucide-react';
-import { createClient } from '@repo/database/server';
-import AddToCartButton from '@/components/atoms/AddToCartButton';
-import { FavoriteToggle } from '@/components/atoms/FavoriteToggle';
-import { getFavoriIds } from '@/lib/favoris';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Tag, MapPin } from "lucide-react";
+import { createClient } from "@repo/database/server";
+import AddToCartButton from "@/components/atoms/AddToCartButton";
+import { FavoriteToggle } from "@/components/atoms/FavoriteToggle";
+import { getFavoriIds } from "@/lib-web/favoris";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -17,13 +17,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const supabase = await createClient();
 
   const { data: product, error } = await supabase
-    .from('produits')
-    .select('id, nom, slug, description, prix_unitaire, image_url, family, region, stock')
-    .eq('slug', slug)
+    .from("produits")
+    .select("id, nom, slug, description, prix_unitaire, image_url, family, region, stock")
+    .eq("slug", slug)
     .maybeSingle();
 
   if (error) {
-    console.error('Erreur produit :', error.message);
+    console.error("Erreur produit :", error.message);
   }
 
   if (!product) {
@@ -93,15 +93,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             <h1 className="text-3xl font-bold tracking-tight text-foreground">{product.nom}</h1>
 
             <div className="text-2xl font-semibold text-shop-orange">
-              {Number.isFinite(prix) ? `${prix.toFixed(2)} Da` : 'Prix sur demande'}
+              {Number.isFinite(prix) ? `${prix.toFixed(2)} Da` : "Prix sur demande"}
             </div>
 
-            {enRupture && (
-              <p className="text-sm font-semibold text-red-600">Rupture de stock</p>
-            )}
+            {enRupture && <p className="text-sm font-semibold text-red-600">Rupture de stock</p>}
 
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {product.description || 'Aucune description disponible pour ce produit.'}
+              {product.description || "Aucune description disponible pour ce produit."}
             </p>
           </div>
 

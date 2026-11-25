@@ -1,31 +1,25 @@
-import Link from 'next/link';
-import { requireRole } from '@/actions/helper';
-import { STATUT_LABELS } from '@/lib/commandes';
+import Link from "next/link";
+import { requireRole } from "@/actions/helper";
+import { STATUT_LABELS } from "@/lib-admin/commandes";
 
 type ClientOption = { id: string; nom: string | null; prenom: string | null; email: string | null };
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ client?: string }>;
-}) {
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ client?: string }> }) {
   const { client } = await searchParams;
-  const auth = await requireRole(['admin', 'manager']);
+  const auth = await requireRole(["admin", "manager"]);
   const supabase = auth.supabase;
 
   // Liste des clients : sert au filtre et aux noms affichés
-  const { data: clientsData } = await supabase.rpc('liste_clients');
+  const { data: clientsData } = await supabase.rpc("liste_clients");
   const clients: ClientOption[] = clientsData ?? [];
-  const nomDe = new Map(
-    clients.map((c) => [c.id, `${c.prenom ?? ''} ${c.nom ?? ''}`.trim() || c.email || 'Client'])
-  );
+  const nomDe = new Map(clients.map((c) => [c.id, `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || c.email || "Client"]));
 
   let query = supabase
-    .from('orders')
-    .select('id, created_at, total, remise, statut, client_id')
-    .order('created_at', { ascending: false });
+    .from("orders")
+    .select("id, created_at, total, remise, statut, client_id")
+    .order("created_at", { ascending: false });
 
-  if (client) query = query.eq('client_id', client);
+  if (client) query = query.eq("client_id", client);
 
   const { data: orders, error } = await query;
 
@@ -43,7 +37,7 @@ export default async function OrdersPage({
         <form method="GET" className="flex items-center gap-2">
           <select
             name="client"
-            defaultValue={client ?? ''}
+            defaultValue={client ?? ""}
             className="px-3 py-2 border border-border rounded-xl bg-background text-xs"
           >
             <option value="">Tous les clients</option>
@@ -80,25 +74,28 @@ export default async function OrdersPage({
               orders.map((o) => (
                 <tr key={o.id} className="hover:bg-muted/30">
                   <td className="p-4">
-                    <Link href={`/admin/orders/${o.id}`} className="font-mono font-semibold text-shop-orange hover:underline">
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="font-mono font-semibold text-shop-orange hover:underline"
+                    >
                       #{o.id.slice(0, 8)}
                     </Link>
                   </td>
-                  <td className="p-4">{nomDe.get(o.client_id) ?? 'Client inconnu'}</td>
+                  <td className="p-4">{nomDe.get(o.client_id) ?? "Client inconnu"}</td>
                   <td className="p-4 text-muted-foreground">
-                    {new Date(o.created_at).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
+                    {new Date(o.created_at).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </td>
                   <td className="p-4 font-semibold">
-                    {Number(o.total).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA
+                    {Number(o.total).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA
                     {Number(o.remise) > 0 && (
                       <span className="block text-[10px] text-green-600">
-                        remise {Number(o.remise).toLocaleString('fr-FR')} DA
+                        remise {Number(o.remise).toLocaleString("fr-FR")} DA
                       </span>
                     )}
                   </td>

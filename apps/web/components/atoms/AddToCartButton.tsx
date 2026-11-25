@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ShoppingBag } from "lucide-react";
-import { useCartStore } from "@/lib/useCartStore";
+import { useCartStore } from "@/lib-web/useCartStore";
 import { CartItem } from "@repo/database";
 
 interface AddToCartButtonProps {

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/lib/useCart";
+import { useCart } from "@/lib-web/useCart";
 import {
   Trash2,
   Plus,

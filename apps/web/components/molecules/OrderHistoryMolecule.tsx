@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Package, Eye } from 'lucide-react';
-import { statutClient } from '@/lib/statuts-client';
+import React from "react";
+import Link from "next/link";
+import { Package, Eye } from "lucide-react";
+import { statutClient } from "@/lib-web/statuts-client";
 
 export interface OrderRecord {
   id: string;
@@ -16,7 +16,7 @@ interface OrderHistoryMoleculeProps {
   orders?: OrderRecord[];
 }
 
-const euros = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DA`;
+const euros = (n: number) => `${n.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA`;
 
 export const OrderHistoryMolecule = ({ orders = [] }: OrderHistoryMoleculeProps) => {
   return (
@@ -37,10 +37,10 @@ export const OrderHistoryMolecule = ({ orders = [] }: OrderHistoryMoleculeProps)
         <div className="flex flex-col gap-3">
           {orders.map((order) => {
             const statut = statutClient(order.statut);
-            const date = new Date(order.created_at).toLocaleDateString('fr-FR', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
+            const date = new Date(order.created_at).toLocaleDateString("fr-FR", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
             });
 
             return (
@@ -58,7 +58,9 @@ export const OrderHistoryMolecule = ({ orders = [] }: OrderHistoryMoleculeProps)
                     {euros(Number(order.total))}
                   </span>
 
-                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${statut.style}`}>
+                  <span
+                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${statut.style}`}
+                  >
                     {statut.label}
                   </span>
 

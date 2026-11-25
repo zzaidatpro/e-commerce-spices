@@ -8,8 +8,8 @@ import NavBar from "../molecules/navBar";
 import AdminBar from "../molecules/AdminBar";
 import { Badge } from "@repo/ui";
 import { menuPourRole, type RoleSite } from "@repo/lib";
-import { useCart } from "@/lib/useCart";
-import { NotificationBell } from '@/components/molecules/NotificationBell';
+import { useCart } from "@/lib-web/useCart";
+import { NotificationBell } from "@/components/molecules/NotificationBell";
 
 interface HeaderProps {
   role: RoleSite;
