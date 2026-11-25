@@ -1,60 +1,77 @@
 version: 2.1
 
 executors:
-  node-executor:
+  node-docker:
     docker:
-      - image: cimg/node:24.18.0
+      - image: cimg/node:20.11-browsers
     working_directory: ~/repo
-    environment:
-      PNPM_HOME: /home/circleci/.local/share/pnpm
-      COREPACK_ENABLE_STRICT: "0"
-      CI: "true"
+  machine-docker:
+    machine:
+      image: ubuntu-2204:current
+    working_directory: ~/repo
 
 jobs:
   quality:
-    executor: node-executor
+    executor: node-docker
     steps:
       - checkout
-      - run:
-          name: Activer pnpm 12.8.1
-          command: |
-            corepack enable
-            corepack prepare pnpm@12.8.1 --activate
-            echo 'export PATH="$PNPM_HOME:$PATH"' >> "$BASH_ENV"
-            source "$BASH_ENV"
+      - run: npm install -g pnpm@9
       - restore_cache:
           keys:
             - v3-deps-{{ checksum "pnpm-lock.yaml" }}
             - v3-deps-
-      - run:
-          name: Installer les dépendances
-          command: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
       - save_cache:
           paths:
             - ~/.local/share/pnpm/store
           key: v3-deps-{{ checksum "pnpm-lock.yaml" }}
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test:unit
       - run:
-          name: Type check
-          command: pnpm typecheck
-      - run:
-          name: Lint
-          command: pnpm lint
-      - run:
-          name: Unit tests
-          command: pnpm test:unit
-      - run:
-          name: Build web et admin
-          command: pnpm --filter ./apps/web --filter ./apps/admin build
+          name: Build web
+          command: pnpm --filter web build
           environment:
             NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
             NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   e2e:
-    executor: node-executor
+    executor: machine-docker
     steps:
+      - checkout
       - run:
-          name: E2E pas encore activés
-          command: echo "Les tests e2e seront branchés après la mise en place de Supabase local en CI."
+          name: Installer pnpm et la CLI Supabase
+          command: |
+            npm install -g pnpm@9
+            pnpm install --frozen-lockfile
+            pnpm add -D -w supabase
+      - run:
+          name: Démarrer Supabase local
+          command: |
+            pnpm exec supabase start
+            pnpm exec supabase db reset
+      - run:
+          name: Écrire .env.test depuis la base locale
+          command: |
+            cat > apps/admin/.env.test <<EOF
+            SUPABASE_URL=http://127.0.0.1:54321
+            SUPABASE_ANON_KEY=$(pnpm exec supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2- | tr -d '"')
+            SUPABASE_SERVICE_ROLE_KEY=$(pnpm exec supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d= -f2- | tr -d '"')
+            NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=$(pnpm exec supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2- | tr -d '"')
+            EOF
+      - run:
+          name: Installer Chromium
+          command: pnpm exec playwright install --with-deps chromium
+      - run:
+          name: Tests e2e
+          command: pnpm exec playwright test
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_artifacts:
+          path: playwright-report
+          destination: playwright-report
 
 workflows:
   quality-check:

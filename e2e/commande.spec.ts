@@ -5,56 +5,62 @@ test('désignation, code, validation et acceptation par le livreur', async ({ br
   const c = comptes();
   const commandeId = await creerCommandePayee(c.client.id, 500);
 
-  // Manager : désignation du livreur, génération et envoi du code
   const managerCtx = await browser.newContext();
   const livreurCtx = await browser.newContext();
+
   try {
-  const managerPage = await managerCtx.newPage();
-  await loginAdmin(managerPage, 'manager');
-  await managerPage.goto(`${ADMIN}/admin/orders/${commandeId}`);
+    // Manager (admin) : désignation
+    const managerPage = await managerCtx.newPage();
+    await loginAdmin(managerPage, 'manager');
+    await managerPage.goto(`${ADMIN}/admin/orders/${commandeId}`);
 
-  // await managerPage.getByRole('combobox').first().selectOption(c.livreur.id);
-  await managerPage.getByTestId('livreur-select').selectOption(c.livreur.id);
-  await managerPage.getByRole('button', { name: 'Désigner', exact: true }).click();
- const titreCode = managerPage.getByRole('heading', { name: 'Code de livraison' });
- const erreurDesignation = managerPage.getByTestId('erreur-designation');
- await expect(titreCode.or(erreurDesignation)).toBeVisible({ timeout: 15_000 });
- if (await erreurDesignation.isVisible()) {
-  throw new Error(`Désignation refusée : ${await erreurDesignation.textContent()}`);
-}
-await managerPage.getByRole('button', { name: /Générer le code/ }).click();
-await expect(
-  managerPage.getByText('Livreur désigné.')
-  .or(managerPage.getByText(/Livreur invalide|Un livreur est déjà assigne |Commande assignee/))
-  .filter({ visible: true })
-  .first()
-  ).toBeVisible();
-  await expect(managerPage.getByRole('heading', { name: 'Code de livraison' })).toBeVisible();
+    await managerPage.getByTestId('livreur-select').selectOption(c.livreur.id);
+    await managerPage.getByRole('button', { name: 'Désigner', exact: true }).click();
 
-  await managerPage.getByRole('button', { name: /Générer le code/ }).click();
+    const titreCode = managerPage.getByRole('heading', { name: 'Code de livraison' });
+    const erreurDesignation = managerPage.getByTestId('erreur-designation');
 
-  const code = ((await managerPage.getByTestId('code-livraison').textContent()) ?? '').trim();
-  expect(code).toMatch(/^\d{6}$/);
+    await expect(titreCode.or(erreurDesignation)).toBeVisible({ timeout: 15_000 });
 
-  await managerPage.getByRole('button', { name: "J'ai envoyé le code" }).click();
-  await expect(managerPage.getByText(/Code envoyé au livreur/)).toBeVisible();
+    if (await erreurDesignation.isVisible()) {
+      throw new Error(`Désignation refusée : ${await erreurDesignation.textContent()}`);
+    }
 
-  // Livreur : saisie du code, acceptation, démarrage
- 
-  const livreurPage = await livreurCtx.newPage();
-  await loginWeb(livreurPage, 'livreur');
-  await livreurPage.goto(`${WEB}/livraisons`);
+    // Manager (admin) : génération du code, dans la section uniquement
+    const section = managerPage.locator('section', { has: titreCode });
+    const boutonGenerer = section.getByRole('button', { name: /générer le code/i });
 
-  const carte = livreurPage.locator('article', { hasText: commandeId.slice(0, 8) });
-  await expect(carte).toBeVisible();
-  await carte.getByPlaceholder('000000').fill(code);
-  await carte.getByRole('button', { name: 'Valider', exact: true }).click();
+    try {
+      await expect(boutonGenerer).toBeVisible({ timeout: 10_000 });
+    } catch {
+      throw new Error(
+        `Bouton « Générer le code » absent. Contenu de la section : ${await section.innerText()}`
+      );
+    }
+    await boutonGenerer.click();
+    const codeAffiche = managerPage.getByTestId('code-livraison');
+    await expect(codeAffiche).toHaveText(/^\d{6}$/, { timeout: 10_000 });
+    const code = (await codeAffiche.innerText()).trim();
+    expect(code).toMatch(/^\d{6}$/);
 
-  await carte.getByRole('button', { name: 'Accepter', exact: true }).click();
-  await expect(carte.getByRole('button', { name: 'Démarrer la livraison' })).toBeVisible();
+    await managerPage.getByRole('button', { name: "J'ai envoyé le code" }).click();
+    await expect(managerPage.getByText(/Code envoyé au livreur/)).toBeVisible();
 
+    // Livreur (site) : validation du code, acceptation, démarrage
+    const livreurPage = await livreurCtx.newPage();
+    await loginWeb(livreurPage, 'livreur');
+    await livreurPage.goto(`${WEB}/livraisons`);
+
+    const carte = livreurPage.locator('article', { hasText: commandeId.slice(0, 8) });
+    await expect(carte).toBeVisible();
+
+    await carte.getByPlaceholder('000000').fill(code);
+    await carte.getByRole('button', { name: 'Valider', exact: true }).click();
+
+    await carte.getByRole('button', { name: 'Accepter', exact: true }).click();
+    await expect(carte.getByRole('button', { name: 'Démarrer la livraison' })).toBeVisible();
   } finally {
-  await managerCtx.close();
-  await livreurCtx.close();
-}
+    await managerCtx.close();
+    await livreurCtx.close();
+  }
 });

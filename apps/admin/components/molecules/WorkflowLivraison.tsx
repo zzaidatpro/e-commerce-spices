@@ -142,7 +142,7 @@ export function CodeLivraisonPanel({
       {code && (
         <div className="p-3 border border-shop-orange/40 rounded-xl bg-shop-orange/5 flex flex-col gap-2">
           <p className="text-muted-foreground">Code à remettre au livreur (affiché une seule fois) :</p>
-          <p className="text-2xl font-mono font-bold tracking-widest text-foreground">{code}</p>
+          <p data-testid="code-livraison" className="text-2xl font-mono font-bold tracking-widest text-foreground">{code}</p>
           <div className="flex flex-wrap gap-2">
             {lienWa ? (
               <a href={lienWa} target="_blank" rel="noopener noreferrer" className={bouton}>
