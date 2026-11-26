@@ -1,11 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
-import { ecrireComptes, type Comptes } from './comptes-store';
-import path from 'node:path';
 import { config as charger } from 'dotenv';
+import path from 'node:path';
+import { ecrireComptes, type Comptes, type Role } from './comptes-store';
 
 charger({ path: path.resolve(__dirname, '..', 'apps', 'admin', '.env.test'), override: true });
+
 const PWD = 'Test-1234-secure';
-const ROLES = ['client', 'manager', 'livreur'] as const;
+const ROLES: Role[] = ['client', 'manager', 'livreur', 'admin'];
+const PRENOMS: Record<Role, string> = {
+  client: 'Client',
+  manager: 'Manager',
+  livreur: 'Livreur',
+  admin: 'Admin',
+};
 
 export default async function globalSetup() {
   const url = process.env.SUPABASE_URL ?? '';
@@ -38,7 +45,7 @@ export default async function globalSetup() {
       id,
       email,
       nom: 'E2E',
-      prenom: role === 'client' ? 'Client' : role === 'manager' ? 'Manager' : 'Livreur',
+      prenom: PRENOMS[role],
       role,
       status: 'approved',
     });
@@ -48,5 +55,4 @@ export default async function globalSetup() {
   }
   
   ecrireComptes(comptes);
- 
 }

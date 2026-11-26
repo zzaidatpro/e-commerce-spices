@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+export type Role = 'client' | 'manager' | 'livreur' | 'admin';
 export type Compte = { id: string; email: string };
-export type Comptes = Record<'client' | 'manager' | 'livreur', Compte>;
+export type Comptes = Record<Role, Compte>;
 
-// Racine du projet : là où se trouve playwright.config.ts
 const RACINE = path.resolve(__dirname, '..');
 const FICHIER = path.join(RACINE, 'e2e', '.comptes.json');
 

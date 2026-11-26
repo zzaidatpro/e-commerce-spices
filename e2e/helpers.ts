@@ -1,12 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { lireComptes } from './comptes-store';
+import { lireComptes, type Role } from './comptes-store';
 
+export type { Role };
 export const WEB = 'http://localhost:3000';
 export const ADMIN = 'http://localhost:3001';
 export const PWD = 'Test-1234-secure';
-
-export type Role = 'client' | 'manager' | 'livreur';
 
 export const comptes = () => lireComptes();
 
